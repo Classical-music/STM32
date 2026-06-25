@@ -1,0 +1,595 @@
+#include "lcd.h"
+#include "timer.h"
+
+static void nt35510_reginit(void) {
+  lcd_write_reg(0xF000, 0x55);
+  lcd_write_reg(0xF001, 0xAA);
+  lcd_write_reg(0xF002, 0x52);
+  lcd_write_reg(0xF003, 0x08);
+  lcd_write_reg(0xF004, 0x01);
+
+  /* AVDD ratio */
+  lcd_write_reg(0xB600, 0x34); /* 34 */
+  lcd_write_reg(0xB601, 0x34); /* 34 */
+  lcd_write_reg(0xB602, 0x34); /* 34 */
+  /* AVDD 5.2V */
+  lcd_write_reg(0xB000, 0x0D); /* 0C,减小，AVDD电压增大 */
+  lcd_write_reg(0xB001, 0x0D); /* 0C */
+  lcd_write_reg(0xB002, 0x0D); /* 0C */
+
+  /* AVEE ratio */
+  lcd_write_reg(0xB700, 0x24); /* 24 */
+  lcd_write_reg(0xB701, 0x24); /* 24 */
+  lcd_write_reg(0xB702, 0x24); /* 24 */
+  /* AVEE -5.2V */
+  lcd_write_reg(0xB100, 0x0D); /* 0C减小，AVEE电压增大 */
+  lcd_write_reg(0xB101, 0x0D); /* 0C */
+  lcd_write_reg(0xB102, 0x0D); /* 0C */
+
+  /* VCL */
+  lcd_write_reg(0xB800, 0x24);
+  lcd_write_reg(0xB801, 0x24);
+  lcd_write_reg(0xB802, 0x24);
+
+  lcd_write_reg(0xB200, 0x00);
+
+  /***************VGH ratio***************/
+  /* VGH ratio */
+  lcd_write_reg(0xB900, 0x24); /* 14 */
+  lcd_write_reg(0xB901, 0x24); /* 14 */
+  lcd_write_reg(0xB902, 0x24); /* 14 */
+  /* VGH 10.2V */
+  lcd_write_reg(0xB300, 0x05); /* 08 */
+  lcd_write_reg(0xB301, 0x05); /* 08 */
+  lcd_write_reg(0xB302, 0x05); /* 08 */
+
+  /***************VGLX ratio***************/
+  /* VGLX ratio */
+  lcd_write_reg(0xBA00, 0x34);
+  lcd_write_reg(0xBA01, 0x34);
+  lcd_write_reg(0xBA02, 0x34);
+  /* VGL_REG -12.6V */
+  lcd_write_reg(0xB500, 0x0B);
+  lcd_write_reg(0xB501, 0x0B);
+  lcd_write_reg(0xB502, 0x0B);
+
+  /***************VGMP/VGSP 4.5V***********/
+  lcd_write_reg(0xBC00, 0x00); /* 00 */
+  lcd_write_reg(0xBC01, 0xA3); /* 80 */
+  lcd_write_reg(0xBC02, 0x00); /* 00 */
+
+  /* GMN/VGSN -4.5V */
+  lcd_write_reg(0xBD00, 0x00); /* 00 */
+  lcd_write_reg(0xBD01, 0xA3); /* 80 */
+  lcd_write_reg(0xBD02, 0x00); /* 00 */
+
+  /* VCOM  -1.25V */
+  lcd_write_reg(0xBE00, 0x00);
+  lcd_write_reg(0xBE01, 0x37); /* 64~2F */
+
+  /***************Gamma Setting***************/
+  lcd_write_reg(0xD100, 0x00);
+  lcd_write_reg(0xD101, 0x37);
+  lcd_write_reg(0xD102, 0x00);
+  lcd_write_reg(0xD103, 0x53);
+  lcd_write_reg(0xD104, 0x00);
+  lcd_write_reg(0xD105, 0x79);
+  lcd_write_reg(0xD106, 0x00);
+  lcd_write_reg(0xD107, 0x97);
+  lcd_write_reg(0xD108, 0x00);
+  lcd_write_reg(0xD109, 0xB1);
+  lcd_write_reg(0xD10A, 0x00);
+  lcd_write_reg(0xD10B, 0xD5);
+  lcd_write_reg(0xD10C, 0x00);
+  lcd_write_reg(0xD10D, 0xF4);
+  lcd_write_reg(0xD10E, 0x01);
+  lcd_write_reg(0xD10F, 0x23);
+  lcd_write_reg(0xD110, 0x01);
+  lcd_write_reg(0xD111, 0x49);
+  lcd_write_reg(0xD112, 0x01);
+  lcd_write_reg(0xD113, 0x87);
+  lcd_write_reg(0xD114, 0x01);
+  lcd_write_reg(0xD115, 0xB6);
+  lcd_write_reg(0xD116, 0x02);
+  lcd_write_reg(0xD117, 0x00);
+  lcd_write_reg(0xD118, 0x02);
+  lcd_write_reg(0xD119, 0x3B);
+  lcd_write_reg(0xD11A, 0x02);
+  lcd_write_reg(0xD11B, 0x3D);
+  lcd_write_reg(0xD11C, 0x02);
+  lcd_write_reg(0xD11D, 0x75);
+  lcd_write_reg(0xD11E, 0x02);
+  lcd_write_reg(0xD11F, 0xB1);
+  lcd_write_reg(0xD120, 0x02);
+  lcd_write_reg(0xD121, 0xD5);
+  lcd_write_reg(0xD122, 0x03);
+  lcd_write_reg(0xD123, 0x09);
+  lcd_write_reg(0xD124, 0x03);
+  lcd_write_reg(0xD125, 0x28);
+  lcd_write_reg(0xD126, 0x03);
+  lcd_write_reg(0xD127, 0x52);
+  lcd_write_reg(0xD128, 0x03);
+  lcd_write_reg(0xD129, 0x6B);
+  lcd_write_reg(0xD12A, 0x03);
+  lcd_write_reg(0xD12B, 0x8D);
+  lcd_write_reg(0xD12C, 0x03);
+  lcd_write_reg(0xD12D, 0xA2);
+  lcd_write_reg(0xD12E, 0x03);
+  lcd_write_reg(0xD12F, 0xBB);
+  lcd_write_reg(0xD130, 0x03);
+  lcd_write_reg(0xD131, 0xC1);
+  lcd_write_reg(0xD132, 0x03);
+  lcd_write_reg(0xD133, 0xC1);
+
+  lcd_write_reg(0xD200, 0x00);
+  lcd_write_reg(0xD201, 0x37);
+  lcd_write_reg(0xD202, 0x00);
+  lcd_write_reg(0xD203, 0x53);
+  lcd_write_reg(0xD204, 0x00);
+  lcd_write_reg(0xD205, 0x79);
+  lcd_write_reg(0xD206, 0x00);
+  lcd_write_reg(0xD207, 0x97);
+  lcd_write_reg(0xD208, 0x00);
+  lcd_write_reg(0xD209, 0xB1);
+  lcd_write_reg(0xD20A, 0x00);
+  lcd_write_reg(0xD20B, 0xD5);
+  lcd_write_reg(0xD20C, 0x00);
+  lcd_write_reg(0xD20D, 0xF4);
+  lcd_write_reg(0xD20E, 0x01);
+  lcd_write_reg(0xD20F, 0x23);
+  lcd_write_reg(0xD210, 0x01);
+  lcd_write_reg(0xD211, 0x49);
+  lcd_write_reg(0xD212, 0x01);
+  lcd_write_reg(0xD213, 0x87);
+  lcd_write_reg(0xD214, 0x01);
+  lcd_write_reg(0xD215, 0xB6);
+  lcd_write_reg(0xD216, 0x02);
+  lcd_write_reg(0xD217, 0x00);
+  lcd_write_reg(0xD218, 0x02);
+  lcd_write_reg(0xD219, 0x3B);
+  lcd_write_reg(0xD21A, 0x02);
+  lcd_write_reg(0xD21B, 0x3D);
+  lcd_write_reg(0xD21C, 0x02);
+  lcd_write_reg(0xD21D, 0x75);
+  lcd_write_reg(0xD21E, 0x02);
+  lcd_write_reg(0xD21F, 0xB1);
+  lcd_write_reg(0xD220, 0x02);
+  lcd_write_reg(0xD221, 0xD5);
+  lcd_write_reg(0xD222, 0x03);
+  lcd_write_reg(0xD223, 0x09);
+  lcd_write_reg(0xD224, 0x03);
+  lcd_write_reg(0xD225, 0x28);
+  lcd_write_reg(0xD226, 0x03);
+  lcd_write_reg(0xD227, 0x52);
+  lcd_write_reg(0xD228, 0x03);
+  lcd_write_reg(0xD229, 0x6B);
+  lcd_write_reg(0xD22A, 0x03);
+  lcd_write_reg(0xD22B, 0x8D);
+  lcd_write_reg(0xD22C, 0x03);
+  lcd_write_reg(0xD22D, 0xA2);
+  lcd_write_reg(0xD22E, 0x03);
+  lcd_write_reg(0xD22F, 0xBB);
+  lcd_write_reg(0xD230, 0x03);
+  lcd_write_reg(0xD231, 0xC1);
+  lcd_write_reg(0xD232, 0x03);
+  lcd_write_reg(0xD233, 0xC1);
+
+  lcd_write_reg(0xD300, 0x00);
+  lcd_write_reg(0xD301, 0x37);
+  lcd_write_reg(0xD302, 0x00);
+  lcd_write_reg(0xD303, 0x53);
+  lcd_write_reg(0xD304, 0x00);
+  lcd_write_reg(0xD305, 0x79);
+  lcd_write_reg(0xD306, 0x00);
+  lcd_write_reg(0xD307, 0x97);
+  lcd_write_reg(0xD308, 0x00);
+  lcd_write_reg(0xD309, 0xB1);
+  lcd_write_reg(0xD30A, 0x00);
+  lcd_write_reg(0xD30B, 0xD5);
+  lcd_write_reg(0xD30C, 0x00);
+  lcd_write_reg(0xD30D, 0xF4);
+  lcd_write_reg(0xD30E, 0x01);
+  lcd_write_reg(0xD30F, 0x23);
+  lcd_write_reg(0xD310, 0x01);
+  lcd_write_reg(0xD311, 0x49);
+  lcd_write_reg(0xD312, 0x01);
+  lcd_write_reg(0xD313, 0x87);
+  lcd_write_reg(0xD314, 0x01);
+  lcd_write_reg(0xD315, 0xB6);
+  lcd_write_reg(0xD316, 0x02);
+  lcd_write_reg(0xD317, 0x00);
+  lcd_write_reg(0xD318, 0x02);
+  lcd_write_reg(0xD319, 0x3b);
+  lcd_write_reg(0xD31A, 0x02);
+  lcd_write_reg(0xD31B, 0x3d);
+  lcd_write_reg(0xD31C, 0x02);
+  lcd_write_reg(0xD31D, 0x75);
+  lcd_write_reg(0xD31E, 0x02);
+  lcd_write_reg(0xD31F, 0xB1);
+  lcd_write_reg(0xD320, 0x02);
+  lcd_write_reg(0xD321, 0xD5);
+  lcd_write_reg(0xD322, 0x03);
+  lcd_write_reg(0xD323, 0x09);
+  lcd_write_reg(0xD324, 0x03);
+  lcd_write_reg(0xD325, 0x28);
+  lcd_write_reg(0xD326, 0x03);
+  lcd_write_reg(0xD327, 0x52);
+  lcd_write_reg(0xD328, 0x03);
+  lcd_write_reg(0xD329, 0x6B);
+  lcd_write_reg(0xD32A, 0x03);
+  lcd_write_reg(0xD32B, 0x8D);
+  lcd_write_reg(0xD32C, 0x03);
+  lcd_write_reg(0xD32D, 0xA2);
+  lcd_write_reg(0xD32E, 0x03);
+  lcd_write_reg(0xD32F, 0xBB);
+  lcd_write_reg(0xD330, 0x03);
+  lcd_write_reg(0xD331, 0xC1);
+  lcd_write_reg(0xD332, 0x03);
+  lcd_write_reg(0xD333, 0xC1);
+
+  lcd_write_reg(0xD400, 0x00);
+  lcd_write_reg(0xD401, 0x37);
+  lcd_write_reg(0xD402, 0x00);
+  lcd_write_reg(0xD403, 0x53);
+  lcd_write_reg(0xD404, 0x00);
+  lcd_write_reg(0xD405, 0x79);
+  lcd_write_reg(0xD406, 0x00);
+  lcd_write_reg(0xD407, 0x97);
+  lcd_write_reg(0xD408, 0x00);
+  lcd_write_reg(0xD409, 0xB1);
+  lcd_write_reg(0xD40A, 0x00);
+  lcd_write_reg(0xD40B, 0xD5);
+  lcd_write_reg(0xD40C, 0x00);
+  lcd_write_reg(0xD40D, 0xF4);
+  lcd_write_reg(0xD40E, 0x01);
+  lcd_write_reg(0xD40F, 0x23);
+  lcd_write_reg(0xD410, 0x01);
+  lcd_write_reg(0xD411, 0x49);
+  lcd_write_reg(0xD412, 0x01);
+  lcd_write_reg(0xD413, 0x87);
+  lcd_write_reg(0xD414, 0x01);
+  lcd_write_reg(0xD415, 0xB6);
+  lcd_write_reg(0xD416, 0x02);
+  lcd_write_reg(0xD417, 0x00);
+  lcd_write_reg(0xD418, 0x02);
+  lcd_write_reg(0xD419, 0x3B);
+  lcd_write_reg(0xD41A, 0x02);
+  lcd_write_reg(0xD41B, 0x3D);
+  lcd_write_reg(0xD41C, 0x02);
+  lcd_write_reg(0xD41D, 0x75);
+  lcd_write_reg(0xD41E, 0x02);
+  lcd_write_reg(0xD41F, 0xB1);
+  lcd_write_reg(0xD420, 0x02);
+  lcd_write_reg(0xD421, 0xD5);
+  lcd_write_reg(0xD422, 0x03);
+  lcd_write_reg(0xD423, 0x09);
+  lcd_write_reg(0xD424, 0x03);
+  lcd_write_reg(0xD425, 0x28);
+  lcd_write_reg(0xD426, 0x03);
+  lcd_write_reg(0xD427, 0x52);
+  lcd_write_reg(0xD428, 0x03);
+  lcd_write_reg(0xD429, 0x6B);
+  lcd_write_reg(0xD42A, 0x03);
+  lcd_write_reg(0xD42B, 0x8D);
+  lcd_write_reg(0xD42C, 0x03);
+  lcd_write_reg(0xD42D, 0xA2);
+  lcd_write_reg(0xD42E, 0x03);
+  lcd_write_reg(0xD42F, 0xBB);
+  lcd_write_reg(0xD430, 0x03);
+  lcd_write_reg(0xD431, 0xC1);
+  lcd_write_reg(0xD432, 0x03);
+  lcd_write_reg(0xD433, 0xC1);
+
+  lcd_write_reg(0xD500, 0x00);
+  lcd_write_reg(0xD501, 0x37);
+  lcd_write_reg(0xD502, 0x00);
+  lcd_write_reg(0xD503, 0x53);
+  lcd_write_reg(0xD504, 0x00);
+  lcd_write_reg(0xD505, 0x79);
+  lcd_write_reg(0xD506, 0x00);
+  lcd_write_reg(0xD507, 0x97);
+  lcd_write_reg(0xD508, 0x00);
+  lcd_write_reg(0xD509, 0xB1);
+  lcd_write_reg(0xD50A, 0x00);
+  lcd_write_reg(0xD50B, 0xD5);
+  lcd_write_reg(0xD50C, 0x00);
+  lcd_write_reg(0xD50D, 0xF4);
+  lcd_write_reg(0xD50E, 0x01);
+  lcd_write_reg(0xD50F, 0x23);
+  lcd_write_reg(0xD510, 0x01);
+  lcd_write_reg(0xD511, 0x49);
+  lcd_write_reg(0xD512, 0x01);
+  lcd_write_reg(0xD513, 0x87);
+  lcd_write_reg(0xD514, 0x01);
+  lcd_write_reg(0xD515, 0xB6);
+  lcd_write_reg(0xD516, 0x02);
+  lcd_write_reg(0xD517, 0x00);
+  lcd_write_reg(0xD518, 0x02);
+  lcd_write_reg(0xD519, 0x3B);
+  lcd_write_reg(0xD51A, 0x02);
+  lcd_write_reg(0xD51B, 0x3D);
+  lcd_write_reg(0xD51C, 0x02);
+  lcd_write_reg(0xD51D, 0x75);
+  lcd_write_reg(0xD51E, 0x02);
+  lcd_write_reg(0xD51F, 0xB1);
+  lcd_write_reg(0xD520, 0x02);
+  lcd_write_reg(0xD521, 0xD5);
+  lcd_write_reg(0xD522, 0x03);
+  lcd_write_reg(0xD523, 0x09);
+  lcd_write_reg(0xD524, 0x03);
+  lcd_write_reg(0xD525, 0x28);
+  lcd_write_reg(0xD526, 0x03);
+  lcd_write_reg(0xD527, 0x52);
+  lcd_write_reg(0xD528, 0x03);
+  lcd_write_reg(0xD529, 0x6B);
+  lcd_write_reg(0xD52A, 0x03);
+  lcd_write_reg(0xD52B, 0x8D);
+  lcd_write_reg(0xD52C, 0x03);
+  lcd_write_reg(0xD52D, 0xA2);
+  lcd_write_reg(0xD52E, 0x03);
+  lcd_write_reg(0xD52F, 0xBB);
+  lcd_write_reg(0xD530, 0x03);
+  lcd_write_reg(0xD531, 0xC1);
+  lcd_write_reg(0xD532, 0x03);
+  lcd_write_reg(0xD533, 0xC1);
+
+  lcd_write_reg(0xD600, 0x00);
+  lcd_write_reg(0xD601, 0x37);
+  lcd_write_reg(0xD602, 0x00);
+  lcd_write_reg(0xD603, 0x53);
+  lcd_write_reg(0xD604, 0x00);
+  lcd_write_reg(0xD605, 0x79);
+  lcd_write_reg(0xD606, 0x00);
+  lcd_write_reg(0xD607, 0x97);
+  lcd_write_reg(0xD608, 0x00);
+  lcd_write_reg(0xD609, 0xB1);
+  lcd_write_reg(0xD60A, 0x00);
+  lcd_write_reg(0xD60B, 0xD5);
+  lcd_write_reg(0xD60C, 0x00);
+  lcd_write_reg(0xD60D, 0xF4);
+  lcd_write_reg(0xD60E, 0x01);
+  lcd_write_reg(0xD60F, 0x23);
+  lcd_write_reg(0xD610, 0x01);
+  lcd_write_reg(0xD611, 0x49);
+  lcd_write_reg(0xD612, 0x01);
+  lcd_write_reg(0xD613, 0x87);
+  lcd_write_reg(0xD614, 0x01);
+  lcd_write_reg(0xD615, 0xB6);
+  lcd_write_reg(0xD616, 0x02);
+  lcd_write_reg(0xD617, 0x00);
+  lcd_write_reg(0xD618, 0x02);
+  lcd_write_reg(0xD619, 0x3B);
+  lcd_write_reg(0xD61A, 0x02);
+  lcd_write_reg(0xD61B, 0x3D);
+  lcd_write_reg(0xD61C, 0x02);
+  lcd_write_reg(0xD61D, 0x75);
+  lcd_write_reg(0xD61E, 0x02);
+  lcd_write_reg(0xD61F, 0xB1);
+  lcd_write_reg(0xD620, 0x02);
+  lcd_write_reg(0xD621, 0xD5);
+  lcd_write_reg(0xD622, 0x03);
+  lcd_write_reg(0xD623, 0x09);
+  lcd_write_reg(0xD624, 0x03);
+  lcd_write_reg(0xD625, 0x28);
+  lcd_write_reg(0xD626, 0x03);
+  lcd_write_reg(0xD627, 0x52);
+  lcd_write_reg(0xD628, 0x03);
+  lcd_write_reg(0xD629, 0x6B);
+  lcd_write_reg(0xD62A, 0x03);
+  lcd_write_reg(0xD62B, 0x8D);
+  lcd_write_reg(0xD62C, 0x03);
+  lcd_write_reg(0xD62D, 0xA2);
+  lcd_write_reg(0xD62E, 0x03);
+  lcd_write_reg(0xD62F, 0xBB);
+  lcd_write_reg(0xD630, 0x03);
+  lcd_write_reg(0xD631, 0xC1);
+  lcd_write_reg(0xD632, 0x03);
+  lcd_write_reg(0xD633, 0xC1);
+
+  /***************LV2 Page 0 enable***************/
+  lcd_write_reg(0xF000, 0x55);
+  lcd_write_reg(0xF001, 0xAA);
+  lcd_write_reg(0xF002, 0x52);
+  lcd_write_reg(0xF003, 0x08);
+  lcd_write_reg(0xF004, 0x00);
+
+  /***************480x800***************/
+  // lcd_write_reg(0xB500, 0x50);
+  // RGB Internal mode
+  // REGW 0xB30001
+  // RGB I/F Setting
+
+  lcd_write_reg(0xB000, 0x00);
+  lcd_write_reg(0xB001, 0x05);
+  lcd_write_reg(0xB002, 0x02);
+  lcd_write_reg(0xB003, 0x05);
+  lcd_write_reg(0xB004, 0x02);
+
+  /*## SDT: */
+  lcd_write_reg(0xB600, 0x08);
+  lcd_write_reg(0xB500, 0x50); /* 0x6b 480x854       0x50 480x800 */
+
+  /***************Display control***************/
+  // lcd_write_reg(0xB100, 0xCC);
+  // lcd_write_reg(0xB101, 0x00);
+
+  /***************Source hold time***************/
+  lcd_write_reg(0xB600, 0x05);
+
+  /***************Gate EQ control***************/
+  lcd_write_reg(0xB700, 0x00);
+  lcd_write_reg(0xB701, 0x00);
+
+  /***************Source EQ control (Mode 2)***************/
+  lcd_write_reg(0xB800, 0x01);
+  lcd_write_reg(0xB801, 0x05);
+  lcd_write_reg(0xB802, 0x05);
+  lcd_write_reg(0xB803, 0x05);
+
+  /***************Inversion mode  (2-dot)***************/
+  lcd_write_reg(0xBC00, 0x02); // 02,2-dot inversion
+  lcd_write_reg(0xBC01, 0x00);
+  lcd_write_reg(0xBC02, 0x00);
+
+  /*************** BOE SETTING(DEFAULT) ***************/
+  lcd_write_reg(0xCC00, 0x03);
+  lcd_write_reg(0xCC01, 0x00);
+  lcd_write_reg(0xCC02, 0x00);
+
+  /***************Frame rate***************/
+  lcd_write_reg(0xBD00, 0x01);
+  lcd_write_reg(0xBD01, 0x84);
+  lcd_write_reg(0xBD02, 0x07); /* 0X1C   0x07 */
+  lcd_write_reg(0xBD03, 0x31);
+  lcd_write_reg(0xBD04, 0x00);
+
+  lcd_write_reg(0xBA00, 0x01);
+
+  lcd_write_reg(0xFF00, 0xAA);
+  lcd_write_reg(0xFF01, 0x55);
+  lcd_write_reg(0xFF02, 0x25);
+  lcd_write_reg(0xFF03, 0x01);
+
+  /*************** Timing control 4H w/ 4-Delayms ***************/
+  lcd_write_reg(0x3600, 0x40);
+  lcd_write_reg(0x3500, 0x00);
+
+  lcd_write_reg(0x3A00, 0x05);
+
+  lcd_write_regno(0x1100);
+  timer_delay_ms(120);
+  lcd_write_regno(0x2900);
+  timer_delay_ms(10);
+  lcd_write_regno(0x2C00);
+}
+
+static bool nt35510_init(void) {
+  // 发送秘钥(厂家提供)
+  lcd_write_reg(0xF000, 0x0055);
+  lcd_write_reg(0xF001, 0x00AA);
+  lcd_write_reg(0xF002, 0x0052);
+  lcd_write_reg(0xF003, 0x0008);
+  lcd_write_reg(0xF004, 0x0001);
+
+  uint16_t lcd_id = 0;
+  lcd_write_regno(0xC500);  // 读取低字节
+  lcd_id = lcd_read_data(); // 读回 0x55
+  lcd_id <<= 8;
+
+  lcd_write_regno(0xC501);   // 读取高字节&复位
+  lcd_id |= lcd_read_data(); // 读回 0x10
+  if (lcd_id != 0x5510)
+    return false;
+  printf("lcd_id: 0x%x\n", lcd_id);
+  timer_delay_ms(5); // 等待复位成功
+
+  nt35510_reginit();
+
+  return true;
+}
+
+static void nt35510_scan_dir(lcd_scan_dir_t scan_dir) {
+  uint16_t regval = 0;
+  uint16_t temp;
+
+  // 仅横屏时,改变扫描方向
+  if (lcddev.dir == 1) {
+    static lcd_scan_dir_t cvt_map[] = {
+        B2T_L2R, B2T_R2L, T2B_L2R, T2B_R2L, L2R_B2T, L2R_T2B, R2L_B2T, R2L_T2B,
+    };
+    scan_dir = cvt_map[scan_dir];
+  }
+
+  // 根据扫描方式 设置 0X36/0X3600 寄存器 bit 5,6,7 位的值
+  switch (scan_dir) {
+  case L2R_T2B: // 左右, 上下
+    regval |= (0 << 7) | (0 << 6) | (0 << 5);
+    break;
+
+  case L2R_B2T: /* 从左到右,从下到上 */
+    regval |= (1 << 7) | (0 << 6) | (0 << 5);
+    break;
+
+  case R2L_T2B: /* 从右到左,从上到下 */
+    regval |= (0 << 7) | (1 << 6) | (0 << 5);
+    break;
+
+  case R2L_B2T: /* 从右到左,从下到上 */
+    regval |= (1 << 7) | (1 << 6) | (0 << 5);
+    break;
+
+  case T2B_L2R: /* 从上到下,从左到右 */
+    regval |= (0 << 7) | (0 << 6) | (1 << 5);
+    break;
+
+  case T2B_R2L: /* 从上到下,从右到左 */
+    regval |= (0 << 7) | (1 << 6) | (1 << 5);
+    break;
+
+  case B2T_L2R: /* 从下到上,从左到右 */
+    regval |= (1 << 7) | (0 << 6) | (1 << 5);
+    break;
+
+  case B2T_R2L: /* 从下到上,从右到左 */
+    regval |= (1 << 7) | (1 << 6) | (1 << 5);
+    break;
+  }
+  lcd_write_reg(0X3600, regval); // 写入方向寄存器
+
+  if (regval & 0X20) {
+    if (lcddev.width < lcddev.height) /* 交换X,Y */
+    {
+      temp = lcddev.width;
+      lcddev.width = lcddev.height;
+      lcddev.height = temp;
+    }
+  } else {
+    if (lcddev.width > lcddev.height) /* 交换X,Y */
+    {
+      temp = lcddev.width;
+      lcddev.width = lcddev.height;
+      lcddev.height = temp;
+    }
+  }
+
+  /* 设置显示区域(开窗)大小 */
+  lcd_write_regno(lcddev.setxcmd);
+  lcd_write_data(0);
+  lcd_write_regno(lcddev.setxcmd + 1);
+  lcd_write_data(0);
+  lcd_write_regno(lcddev.setxcmd + 2);
+  lcd_write_data((lcddev.width - 1) >> 8);
+  lcd_write_regno(lcddev.setxcmd + 3);
+  lcd_write_data((lcddev.width - 1) & 0XFF);
+  lcd_write_regno(lcddev.setycmd);
+  lcd_write_data(0);
+  lcd_write_regno(lcddev.setycmd + 1);
+  lcd_write_data(0);
+  lcd_write_regno(lcddev.setycmd + 2);
+  lcd_write_data((lcddev.height - 1) >> 8);
+  lcd_write_regno(lcddev.setycmd + 3);
+  lcd_write_data((lcddev.height - 1) & 0XFF);
+}
+
+static void nt35510_set_cursor(uint16_t x, uint16_t y) {
+  lcd_write_regno(lcddev.setxcmd);
+  lcd_write_data(x >> 8);
+  lcd_write_regno(lcddev.setxcmd + 1);
+  lcd_write_data(x & 0XFF);
+  lcd_write_regno(lcddev.setycmd);
+  lcd_write_data(y >> 8);
+  lcd_write_regno(lcddev.setycmd + 1);
+  lcd_write_data(y & 0XFF);
+}
+
+lcd_dev_t lcddev = {
+    .init = nt35510_init,
+    .scan_dir = nt35510_scan_dir,
+    .set_cursor = nt35510_set_cursor,
+    .width = 480,
+    .height = 800,
+    .dir = 0,
+    .wramcmd = 0X2C00,
+    .setxcmd = 0X2A00,
+    .setycmd = 0X2B00,
+};
