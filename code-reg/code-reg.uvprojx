@@ -425,6 +425,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\drivers\dma.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\drivers\i2c.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -474,6 +479,16 @@
               <FileName>lcd_nt35510.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\devices\lcd_nt35510.c</FilePath>
+            </File>
+            <File>
+              <FileName>eeprom.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\devices\eeprom\eeprom.c</FilePath>
+            </File>
+            <File>
+              <FileName>bsp_24c02.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\devices\eeprom\bsp_24c02.c</FilePath>
             </File>
           </Files>
         </Group>
