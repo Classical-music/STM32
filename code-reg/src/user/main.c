@@ -18,14 +18,17 @@ int main() {
   cmd_init();
   tpad_init();
   lcd_init();
-  eeprom_init();
-  uint8_t ch = eeprom_read_byte(0);
-  eeprom_write_byte(0, ++ch);
-  // eeprom_write_byte(1, 'e');
-  // eeprom_write_byte(2, 'f');
-  printf("eeprom read byte: %c\n", eeprom_read_byte(0)
-         // , eeprom_read_byte(1), eeprom_read_byte(2)
-  );
+  EEPROM_INIT();
+  EEPROM_WB(0, 'a');
+  EEPROM_WB(1, 'b');
+  EEPROM_WB(2, 'c');
+  printf("eeprom read byte: %c %c %c\n", EEPROM_RB(0), EEPROM_RB(1),
+         EEPROM_RB(2));
+  char str[] = "hello, world!";
+  EEPROM_WRITE(0, str);
+  char buf[16] = {0};
+  EEPROM_READ(0, buf);
+  printf("eeprom read: %s\n", buf);
 
   while (1) {
     timer_tick();

@@ -10,7 +10,7 @@
 
 #define I2C_DELAY                                                              \
   do {                                                                         \
-    uint16_t i = 0xFF;                                                         \
+    uint16_t i = 0x8;                                                          \
     while (i--)                                                                \
       ;                                                                        \
   } while (0)
