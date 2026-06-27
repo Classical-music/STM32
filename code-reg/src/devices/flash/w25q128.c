@@ -137,7 +137,6 @@ static uint8_t flash_read_sr(uint8_t regno) {
   uint8_t byte = spi_rw(0xFF);
 
   CS(false);
-  printf("sr%d = %x\n", regno, byte);
 
   return byte;
 }
@@ -174,7 +173,6 @@ static void flash_write_enable(void) {
 }
 
 static void flash_send_addr(uint32_t addr) {
-  spi_rw(addr >> 24); // bit31 ~ bit24
   spi_rw(addr >> 16); // bit23 ~ bit16
   spi_rw(addr >> 8);  // bit15 ~ bit8
   spi_rw(addr);       // bit7 ~ bit0
@@ -201,7 +199,7 @@ void flash_write_page(uint32_t addr, uint8_t *buff, uint16_t size) {
   flash_wait_busy(); // 等待写入结束
 }
 
-static void flash_write_nocheck(uint32_t addr, uint8_t *buff, uint16_t size) {
+void flash_write_nocheck(uint32_t addr, uint8_t *buff, uint16_t size) {
   uint16_t pageRemain = 256 - addr % 256; // 单页剩余字节数
   if (size < pageRemain) {
     pageRemain = size;
@@ -231,7 +229,6 @@ static void flash_write_nocheck(uint32_t addr, uint8_t *buff, uint16_t size) {
 
 // 擦除一个扇区
 void flash_erase_sector(uint32_t saddr) {
-  printf("erase_sec\n");
   saddr *= 4096;
   flash_write_enable(); // 写使能
   flash_wait_busy();    // 等待空闲
@@ -256,7 +253,6 @@ void read_w25q128(uint32_t addr, uint8_t *buff, uint16_t size) {
 
   for (i = 0; i < size; i++) {
     buff[i] = spi_rw(0xFF); // 循环读取
-    printf("%x ", buff[i]);
   }
 
   CS(false);
