@@ -2,12 +2,17 @@
 #include "cmd/cmd.h"
 #include "eeprom/eeprom.h"
 #include "event.h"
+#include "flash/flash.h"
 #include "key/app_key.h"
 #include "lcd.h"
 #include "timer.h"
 #include "tpad.h"
 #include "usart.h"
 #include <stdio.h>
+
+void flash_erase_sector(uint32_t saddr);
+extern void flash_write_page(uint32_t addr, uint8_t *buff, uint16_t size);
+void read_w25q128(uint32_t addr, uint8_t *buff, uint16_t size);
 
 int main() {
   board_init();
@@ -17,18 +22,20 @@ int main() {
   app_key_init();
   cmd_init();
   tpad_init();
-  lcd_init();
-  EEPROM_INIT();
-  EEPROM_WB(0, 'a');
-  EEPROM_WB(1, 'b');
-  EEPROM_WB(2, 'c');
-  printf("eeprom read byte: %c %c %c\n", EEPROM_RB(0), EEPROM_RB(1),
-         EEPROM_RB(2));
-  char str[] = "hello, world!";
-  EEPROM_WRITE(0, str);
-  char buf[16] = {0};
-  EEPROM_READ(0, buf);
-  printf("eeprom read: %s\n", buf);
+  // lcd_init();
+  // EEPROM_INIT();
+  flash_init();
+
+  // 擦除
+  // char str[] = "hello, world";
+  // FLASH_WRITE(0, str);
+  // flash_write_page(0, "h", 1);
+  char buff[16] = {0};
+  read_w25q128(0, buff, 1);
+  flash_erase_sector(0);
+  read_w25q128(0, buff, 1);
+  // FLASH_READ(0, buff);
+  // printf("read flash: %s\n", buff);
 
   while (1) {
     timer_tick();

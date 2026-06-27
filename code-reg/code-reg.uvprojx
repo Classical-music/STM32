@@ -430,6 +430,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\drivers\i2c\i2c_soft.c</FilePath>
             </File>
+            <File>
+              <FileName>spi.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\drivers\spi\spi.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -489,6 +494,16 @@
               <FileName>bsp_24c02.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\devices\eeprom\bsp_24c02.c</FilePath>
+            </File>
+            <File>
+              <FileName>flash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\devices\flash\flash.c</FilePath>
+            </File>
+            <File>
+              <FileName>w25q128.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\devices\flash\w25q128.c</FilePath>
             </File>
           </Files>
         </Group>
