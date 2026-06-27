@@ -19,11 +19,13 @@ int main() {
   tpad_init();
   lcd_init();
   eeprom_init();
-  eeprom_write_byte(0, 'a');
-  eeprom_write_byte(1, 'b');
-  eeprom_write_byte(2, 'c');
-  printf("eeprom read byte: %c %c %c\n", eeprom_read_byte(0),
-         eeprom_read_byte(1), eeprom_read_byte(2));
+  uint8_t ch = eeprom_read_byte(0);
+  eeprom_write_byte(0, ++ch);
+  // eeprom_write_byte(1, 'e');
+  // eeprom_write_byte(2, 'f');
+  printf("eeprom read byte: %c\n", eeprom_read_byte(0)
+         // , eeprom_read_byte(1), eeprom_read_byte(2)
+  );
 
   while (1) {
     timer_tick();

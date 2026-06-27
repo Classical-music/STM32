@@ -426,9 +426,9 @@
               <FilePath>.\src\drivers\dma.c</FilePath>
             </File>
             <File>
-              <FileName>i2c.c</FileName>
+              <FileName>i2c_soft.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\drivers\i2c.c</FilePath>
+              <FilePath>.\src\drivers\i2c\i2c_soft.c</FilePath>
             </File>
           </Files>
         </Group>
