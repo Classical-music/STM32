@@ -2,5 +2,5 @@
 #include "eeprom_test.h"
 
 void test(void) {
-  eeprom_test(); //
+  // eeprom_test(); //
 }

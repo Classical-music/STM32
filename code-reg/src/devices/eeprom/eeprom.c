@@ -10,13 +10,13 @@ void eeprom_init(void) {
 uint8_t eeprom_read_byte(uint8_t addr) {
   return eeprom_ptr->read_byte(addr); //
 }
-
 void eeprom_write_byte(uint8_t addr, uint8_t data) {
   eeprom_ptr->write_byte(addr, data); //
 }
-void eeprom_read(uint8_t addr, uint8_t *buff, uint8_t size) {
+
+void eeprom_read(uint8_t addr, uint8_t *buff, uint16_t size) {
   eeprom_ptr->read(addr, buff, size); //
 }
-void eeprom_write(uint8_t addr, uint8_t *buff, uint8_t size) {
+void eeprom_write(uint8_t addr, uint8_t *buff, uint16_t size) {
   eeprom_ptr->write(addr, buff, size);
 }

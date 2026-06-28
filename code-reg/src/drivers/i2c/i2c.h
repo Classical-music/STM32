@@ -3,7 +3,7 @@
 
 #include "type.h"
 
-#define I2C_HARD 1
+#define I2C_HARD 0
 
 #if I2C_HARD
 
