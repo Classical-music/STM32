@@ -1,12 +1,15 @@
-#include "gpio.h"
 #include "i2c.h"
 
-#define SCL_HIGH(i2c) GPIO_HIGH(GPIOB, 6)
-#define SCL_LOW(i2c) GPIO_LOW(GPIOB, 6)
-#define SDA_HIGH(i2c) GPIO_HIGH(GPIOB, 7)
-#define SDA_LOW(i2c) GPIO_LOW(GPIOB, 7)
+#if !I2C_HARD
 
-#define SDA_READ(i2c) GPIO_READ(GPIOB, 7)
+#include "gpio.h"
+
+#define SCL_HIGH(ctx) GPIO_HIGH(ctx->scl_port, ctx->scl_pin)
+#define SCL_LOW(ctx) GPIO_LOW(ctx->scl_port, ctx->scl_pin)
+#define SDA_HIGH(ctx) GPIO_HIGH(ctx->sda_port, ctx->sda_pin)
+#define SDA_LOW(ctx) GPIO_LOW(ctx->sda_port, ctx->sda_pin)
+
+#define SDA_READ(ctx) GPIO_READ(ctx->sda_port, ctx->sda_pin)
 
 #define I2C_DELAY                                                              \
   do {                                                                         \
@@ -15,9 +18,9 @@
       ;                                                                        \
   } while (0)
 
-void i2c_init(i2c_t *ctx) {}
+static void i2c_init(i2c_ctx_t *ctx) {}
 
-bool i2c_start(i2c_t *ctx) {
+static bool i2c_start(i2c_ctx_t *ctx) {
   // 准备
   SDA_HIGH(ctx);
   SCL_HIGH(ctx);
@@ -30,7 +33,7 @@ bool i2c_start(i2c_t *ctx) {
   return true;
 }
 
-void i2c_stop(i2c_t *ctx) {
+static void i2c_stop(i2c_ctx_t *ctx) {
   // 准备
   SDA_LOW(ctx);
   SCL_HIGH(ctx);
@@ -41,7 +44,7 @@ void i2c_stop(i2c_t *ctx) {
   I2C_DELAY;
 }
 
-static void i2c_ack(bool ack) {
+static void i2c_ack(i2c_ctx_t *ctx, bool ack) {
   // 准备
   SCL_LOW(ctx);
   SDA_HIGH(ctx);
@@ -69,7 +72,7 @@ static void i2c_ack(bool ack) {
   // nack, SDA 无需释放
 }
 
-static bool i2c_wait_ack(i2c_t *ctx) {
+static bool i2c_wait_ack(i2c_ctx_t *ctx) {
   // 释放数据总线
   SCL_LOW(ctx);
   SDA_HIGH(ctx);
@@ -90,7 +93,7 @@ static bool i2c_wait_ack(i2c_t *ctx) {
 }
 
 // 发送一个字节
-bool i2c_send_byte(i2c_t *ctx, uint8_t data) {
+static bool i2c_send_byte(i2c_ctx_t *ctx, uint8_t data) {
   for (uint8_t i = 0; i < 8; i++) {
     // 拉低 SCL, 准备发数据
     SCL_LOW(ctx);
@@ -114,7 +117,7 @@ bool i2c_send_byte(i2c_t *ctx, uint8_t data) {
   return i2c_wait_ack(ctx);
 }
 
-uint8_t i2c_read_byte(i2c_t *ctx, bool ack) {
+static uint8_t i2c_read_byte(i2c_ctx_t *ctx, bool ack) {
   uint8_t data = 0;
   for (uint8_t i = 0; i < 8; i++) {
     // SCL 拉低, 从机准备发数据
@@ -133,7 +136,18 @@ uint8_t i2c_read_byte(i2c_t *ctx, bool ack) {
   }
 
   // 发送 ack/nack 信号
-  i2c_ack(ack);
+  i2c_ack(ctx, ack);
 
   return data;
 }
+
+i2c_t i2c_ops = {
+    .init = i2c_init,
+    .start = i2c_start,
+    .stop = i2c_stop,
+    .send_addr = i2c_send_byte,
+    .send_byte = i2c_send_byte,
+    .read_byte = i2c_read_byte,
+};
+
+#endif

@@ -5,6 +5,7 @@
 #include "flash/flash.h"
 #include "key/app_key.h"
 #include "lcd.h"
+#include "test/test.h"
 #include "timer.h"
 #include "tpad.h"
 #include "usart.h"
@@ -21,6 +22,8 @@ int main() {
   lcd_init();
   EEPROM_INIT();
   flash_init();
+
+  test();
 
   while (1) {
     timer_tick();

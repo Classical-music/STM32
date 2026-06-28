@@ -23,8 +23,6 @@ typedef enum {
 
 #define GPIO_MODE_SET(port, pin, val)                                          \
   do {                                                                         \
-    if (pin < 0)                                                               \
-      break;                                                                   \
     uint8_t shift;                                                             \
     if (pin < 8) {                                                             \
       shift = (uint8_t)(pin << 2);                                             \
@@ -39,8 +37,6 @@ typedef enum {
 
 #define GPIO_HIGH(port, pin)                                                   \
   do {                                                                         \
-    if (pin < 0)                                                               \
-      break;                                                                   \
     if (pin < 16) {                                                            \
       port->ODR |= 1 << pin;                                                   \
     }                                                                          \
@@ -48,8 +44,6 @@ typedef enum {
 
 #define GPIO_LOW(port, pin)                                                    \
   do {                                                                         \
-    if (pin < 0)                                                               \
-      break;                                                                   \
     if (pin < 16) {                                                            \
       port->ODR &= ~(1 << pin);                                                \
     }                                                                          \
@@ -57,8 +51,6 @@ typedef enum {
 
 #define GPIO_TOGGLE(port, pin)                                                 \
   do {                                                                         \
-    if (pin < 0)                                                               \
-      break;                                                                   \
     if (pin < 16)                                                              \
       port->ODR ^= (1 << pin);                                                 \
   } while (0)

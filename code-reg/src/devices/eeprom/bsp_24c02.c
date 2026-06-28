@@ -16,7 +16,21 @@
 
 #define DELAY_EEPROM timer_delay_ms(5)
 
-static i2c_t i2c_ctx = {.i2c = I2C1, .freq = 36, .fast = false, .duty = false};
+#if I2C_HARD
+
+static i2c_ctx_t i2c_ctx = {
+    .i2c = I2C1, .freq = 36, .fast = false, .duty = false};
+
+#else
+
+static i2c_ctx_t i2c_ctx = {
+    .scl_port = GPIOB,
+    .scl_pin = 6,
+    .sda_port = GPIOB,
+    .sda_pin = 7,
+};
+
+#endif
 
 static void init_24c02(void) {
   // RCC
@@ -33,6 +47,7 @@ static void init_24c02(void) {
 static uint8_t read_byte_24c02(uint8_t addr) {
   // 发送起始信号
   if (!I2C_START(i2c_ctx)) {
+    printf("%s:%d i2c_start failed\n", __FILE__, __LINE__);
     return 0;
   }
 

@@ -435,6 +435,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\drivers\spi\spi.c</FilePath>
             </File>
+            <File>
+              <FileName>i2c_hard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\drivers\i2c\i2c_hard.c</FilePath>
+            </File>
+            <File>
+              <FileName>i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\drivers\i2c\i2c.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -559,6 +569,21 @@
               <FileName>app_led.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\user\led\app_led.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>user/test</GroupName>
+          <Files>
+            <File>
+              <FileName>eeprom_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\user\test\eeprom_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\user\test\test.c</FilePath>
             </File>
           </Files>
         </Group>
