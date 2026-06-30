@@ -445,6 +445,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\drivers\i2c\i2c.c</FilePath>
             </File>
+            <File>
+              <FileName>fsmc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\drivers\fsmc\fsmc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -486,16 +491,6 @@
               <FilePath>.\src\devices\board.c</FilePath>
             </File>
             <File>
-              <FileName>lcd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\devices\lcd.c</FilePath>
-            </File>
-            <File>
-              <FileName>lcd_nt35510.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\devices\lcd_nt35510.c</FilePath>
-            </File>
-            <File>
               <FileName>eeprom.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\devices\eeprom\eeprom.c</FilePath>
@@ -514,6 +509,16 @@
               <FileName>m25q128.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\devices\flash\m25q128.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\devices\lcd\lcd.c</FilePath>
+            </File>
+            <File>
+              <FileName>lcd_nt35510.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\devices\lcd\lcd_nt35510.c</FilePath>
             </File>
           </Files>
         </Group>

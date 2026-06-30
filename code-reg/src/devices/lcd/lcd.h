@@ -36,22 +36,16 @@ typedef struct {
   volatile uint16_t ram;
 } lcd_t;
 
+// 扫描方向
 typedef enum {
-  L2R_T2B = 0, // 左右, 上下
-  L2R_B2T,     // 左右, 下上
-  R2L_T2B,     // 右左, 上下
-  R2L_B2T,     // 右左, 下上
-
-  T2B_L2R = 4, // 上下, 左右
-  T2B_R2L,     // 上下, 右左
-  B2T_L2R,     // 下上, 左右
-  B2T_R2L,     // 下上, 右左
-} lcd_scan_dir_t;
+  LCD_DIR_VERT, // 竖屏
+  LCD_DIR_HOR,  // 横屏
+} lcd_dir_t;
 
 // LCD 重要参数
 typedef struct {
   bool (*init)(void);
-  void (*scan_dir)(lcd_scan_dir_t);
+  void (*scan_dir)(lcd_dir_t);
   void (*set_cursor)(uint16_t x, uint16_t y);
   uint16_t width;
   uint16_t height;
@@ -75,17 +69,52 @@ extern lcd_dev_t lcddev;
 #define LCD_BASE 0x6C0007FE
 #define LCD ((lcd_t *)LCD_BASE)
 
-// LCD_FSMC寄存器地址 ========================================
-#define FSMC_BCR FSMC_Bank1->BTCR[6]   // ne4
-#define FSMC_BTR FSMC_Bank1->BTCR[7]   // ne4
-#define FSMC_BWTR FSMC_Bank1E->BWTR[6] // ne4
-
 void lcd_init(void);
 
 void lcd_write_data(volatile uint16_t data);
 void lcd_write_regno(volatile uint16_t regno);
 void lcd_write_reg(uint16_t regno, uint16_t data);
 uint16_t lcd_read_data(void);
+
+// 设置屏幕方向 横屏or竖屏
 void lcd_display_dir(uint8_t dir);
+
+// 画点
+void lcd_draw_point(uint16_t x, uint16_t y, uint32_t color);
+
+// 全屏填充颜色
 void lcd_clear(uint16_t color);
+// 填充实心圆
+void lcd_fill_circle(uint16_t x, uint16_t y, uint16_t r, uint16_t color);
+// 画圆
+void lcd_draw_circle(uint16_t x0, uint16_t y0, uint8_t r, uint16_t color);
+// 画水平线
+void lcd_draw_hline(uint16_t x, uint16_t y, uint16_t len, uint16_t color);
+// 设置窗口
+void lcd_set_window(uint16_t sx, uint16_t sy, uint16_t width, uint16_t height);
+// 纯色填充矩阵
+void lcd_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey,
+              uint16_t color);
+// 彩色填充矩阵
+void lcd_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey,
+                    uint16_t *color);
+// 画直线
+void lcd_draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
+                   uint16_t color);
+// 画矩形
+void lcd_draw_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
+                   uint16_t color);
+
+// 显示一个字符
+void lcd_show_char(uint16_t x, uint16_t y, char ch, uint8_t size, uint8_t mode,
+                   uint16_t color);
+// 显示数字
+void lcd_show_num(uint16_t x, uint16_t y, uint32_t num, uint8_t len,
+                  uint8_t size, uint16_t color);
+// 扩展显示数字
+void lcd_show_xnum(uint16_t x, uint16_t y, uint32_t num, uint8_t len,
+                   uint8_t size, uint8_t mode, uint16_t color);
+// 显示字符串
+void lcd_show_str(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
+                  uint8_t size, char *p, uint16_t color);
 #endif

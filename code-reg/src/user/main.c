@@ -4,7 +4,7 @@
 #include "event.h"
 #include "flash/flash.h"
 #include "key/app_key.h"
-#include "lcd.h"
+#include "lcd/lcd.h"
 #include "test/test.h"
 #include "timer.h"
 #include "tpad.h"

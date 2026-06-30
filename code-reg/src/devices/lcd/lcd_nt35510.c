@@ -488,71 +488,24 @@ static bool nt35510_init(void) {
   return true;
 }
 
-static void nt35510_scan_dir(lcd_scan_dir_t scan_dir) {
+static void nt35510_scan_dir(lcd_dir_t dir) {
   uint16_t regval = 0;
   uint16_t temp;
 
-  // 仅横屏时,改变扫描方向
-  if (lcddev.dir == 1) {
-    static lcd_scan_dir_t cvt_map[] = {
-        B2T_L2R, B2T_R2L, T2B_L2R, T2B_R2L, L2R_B2T, L2R_T2B, R2L_B2T, R2L_T2B,
-    };
-    scan_dir = cvt_map[scan_dir];
-  }
-
   // 根据扫描方式 设置 0X36/0X3600 寄存器 bit 5,6,7 位的值
-  switch (scan_dir) {
-  case L2R_T2B: // 左右, 上下
-    regval |= (0 << 7) | (0 << 6) | (0 << 5);
+  switch (dir) {
+  case LCD_DIR_VERT: // 竖屏
+    regval = 0;
     break;
 
-  case L2R_B2T: /* 从左到右,从下到上 */
-    regval |= (1 << 7) | (0 << 6) | (0 << 5);
-    break;
-
-  case R2L_T2B: /* 从右到左,从上到下 */
-    regval |= (0 << 7) | (1 << 6) | (0 << 5);
-    break;
-
-  case R2L_B2T: /* 从右到左,从下到上 */
-    regval |= (1 << 7) | (1 << 6) | (0 << 5);
-    break;
-
-  case T2B_L2R: /* 从上到下,从左到右 */
-    regval |= (0 << 7) | (0 << 6) | (1 << 5);
-    break;
-
-  case T2B_R2L: /* 从上到下,从右到左 */
-    regval |= (0 << 7) | (1 << 6) | (1 << 5);
-    break;
-
-  case B2T_L2R: /* 从下到上,从左到右 */
-    regval |= (1 << 7) | (0 << 6) | (1 << 5);
-    break;
-
-  case B2T_R2L: /* 从下到上,从右到左 */
-    regval |= (1 << 7) | (1 << 6) | (1 << 5);
+  case LCD_DIR_HOR: // 横屏
+    regval = (1 << 7) | (1 << 5);
     break;
   }
   lcd_write_reg(0X3600, regval); // 写入方向寄存器
 
-  if (regval & 0X20) {
-    if (lcddev.width < lcddev.height) /* 交换X,Y */
-    {
-      temp = lcddev.width;
-      lcddev.width = lcddev.height;
-      lcddev.height = temp;
-    }
-  } else {
-    if (lcddev.width > lcddev.height) /* 交换X,Y */
-    {
-      temp = lcddev.width;
-      lcddev.width = lcddev.height;
-      lcddev.height = temp;
-    }
-  }
-
   /* 设置显示区域(开窗)大小 */
+  // 设置行的起始&结束地址, 2B, 0~width-1
   lcd_write_regno(lcddev.setxcmd);
   lcd_write_data(0);
   lcd_write_regno(lcddev.setxcmd + 1);
@@ -560,7 +513,8 @@ static void nt35510_scan_dir(lcd_scan_dir_t scan_dir) {
   lcd_write_regno(lcddev.setxcmd + 2);
   lcd_write_data((lcddev.width - 1) >> 8);
   lcd_write_regno(lcddev.setxcmd + 3);
-  lcd_write_data((lcddev.width - 1) & 0XFF);
+  lcd_write_data((lcddev.width - 1) & 0xFF);
+  // 设置列的起始&结束地址, 2B, 0-height-1
   lcd_write_regno(lcddev.setycmd);
   lcd_write_data(0);
   lcd_write_regno(lcddev.setycmd + 1);
@@ -568,18 +522,19 @@ static void nt35510_scan_dir(lcd_scan_dir_t scan_dir) {
   lcd_write_regno(lcddev.setycmd + 2);
   lcd_write_data((lcddev.height - 1) >> 8);
   lcd_write_regno(lcddev.setycmd + 3);
-  lcd_write_data((lcddev.height - 1) & 0XFF);
+  lcd_write_data((lcddev.height - 1) & 0xFF);
 }
 
 static void nt35510_set_cursor(uint16_t x, uint16_t y) {
+  // 设置要刷新区域的左上角
   lcd_write_regno(lcddev.setxcmd);
   lcd_write_data(x >> 8);
   lcd_write_regno(lcddev.setxcmd + 1);
-  lcd_write_data(x & 0XFF);
+  lcd_write_data(x & 0xFF);
   lcd_write_regno(lcddev.setycmd);
   lcd_write_data(y >> 8);
   lcd_write_regno(lcddev.setycmd + 1);
-  lcd_write_data(y & 0XFF);
+  lcd_write_data(y & 0xFF);
 }
 
 lcd_dev_t lcddev = {
@@ -590,6 +545,6 @@ lcd_dev_t lcddev = {
     .height = 800,
     .dir = 0,
     .wramcmd = 0X2C00,
-    .setxcmd = 0X2A00,
-    .setycmd = 0X2B00,
+    .setxcmd = 0X2A00, // CASET 行地址设置
+    .setycmd = 0X2B00, // RASET 列地址设置
 };
