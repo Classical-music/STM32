@@ -490,7 +490,6 @@ static bool nt35510_init(void) {
 
 static void nt35510_scan_dir(lcd_dir_t dir) {
   uint16_t regval = 0;
-  uint16_t temp;
 
   // 根据扫描方式 设置 0X36/0X3600 寄存器 bit 5,6,7 位的值
   switch (dir) {

@@ -77,7 +77,7 @@ void lcd_write_reg(uint16_t regno, uint16_t data);
 uint16_t lcd_read_data(void);
 
 // 设置屏幕方向 横屏or竖屏
-void lcd_display_dir(uint8_t dir);
+void lcd_display_dir(lcd_dir_t dir);
 
 // 画点
 void lcd_draw_point(uint16_t x, uint16_t y, uint32_t color);

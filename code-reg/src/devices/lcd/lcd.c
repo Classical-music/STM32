@@ -97,7 +97,7 @@ void lcd_write_ram_prepare(void) {
 }
 
 // 设置LCD显示方向: 0-竖屏 1-横屏
-void lcd_display_dir(uint8_t dir) {
+void lcd_display_dir(lcd_dir_t dir) {
   if (lcddev.dir == dir)
     return;
   lcddev.dir = dir;
