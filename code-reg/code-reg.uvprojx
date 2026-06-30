@@ -511,9 +511,9 @@
               <FilePath>.\src\devices\flash\flash.c</FilePath>
             </File>
             <File>
-              <FileName>w25q128.c</FileName>
+              <FileName>m25q128.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\devices\flash\w25q128.c</FilePath>
+              <FilePath>.\src\devices\flash\m25q128.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -584,6 +584,11 @@
               <FileName>test.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\user\test\test.c</FilePath>
+            </File>
+            <File>
+              <FileName>flash_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\user\test\flash_test.c</FilePath>
             </File>
           </Files>
         </Group>

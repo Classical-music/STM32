@@ -198,7 +198,7 @@ static void write_24c02(uint8_t addr, uint8_t *buff, uint16_t size) {
   while (1) {
     if (remain >= size) {
       // 页内剩余大小大于写入大小, 当前页空间足够
-      return write_24c02_page(addr, buff, size); // 直接写入即可
+      return write_24c02_page(addr, buff, size); // 直接写入
     }
     // 否则 remain < size 当前页空间不足, 先写完当前页
     write_24c02_page(addr, buff, remain);

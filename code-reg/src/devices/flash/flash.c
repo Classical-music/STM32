@@ -1,8 +1,6 @@
 #include "flash.h"
 
-extern flash_t flash_w25q128;
-
-static flash_t *flash_ptr = &flash_w25q128;
+static flash_t *flash_ptr = &flash_m25q128;
 
 void flash_init(void) {
   flash_ptr->init(); //
