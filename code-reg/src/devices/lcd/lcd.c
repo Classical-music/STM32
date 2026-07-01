@@ -68,12 +68,12 @@ void lcd_init(void) {
 
   if (!lcddev.init())
     return;
-  lcd_display_dir(LCD_DIR_VERT); // 默认设为竖屏
+  lcd_set_dir(LCD_DIR_VERT); // 默认设为竖屏
 
   // 点亮屏幕
   LCD_BL(1);
 
-  lcd_clear(0xF800);
+  LCD_CLEAR(0xFFFFFF);
 }
 
 // LCD 读写
@@ -88,16 +88,21 @@ void lcd_write_reg(uint16_t regno, uint16_t data) {
   LCD->ram = data;  // 写入数据
 }
 uint16_t lcd_read_data(void) {
-  volatile uint16_t data;
-  data = LCD->ram;
-  return data;
-}
-void lcd_write_ram_prepare(void) {
-  LCD->reg = lcddev.wramcmd; //
+  volatile uint16_t ram;
+  ram = LCD->ram;
+  return ram;
 }
 
+// 开启 LCD
+void lcd_on(void) {
+  lcd_write_regno(lcddev.disponCmd); //
+}
+// 关闭 LCD
+void lcd_off(void) {
+  lcd_write_regno(lcddev.dispoffCmd); //
+}
 // 设置LCD显示方向: 0-竖屏 1-横屏
-void lcd_display_dir(lcd_dir_t dir) {
+void lcd_set_dir(lcd_dir_t dir) {
   if (lcddev.dir == dir)
     return;
   lcddev.dir = dir;
@@ -105,12 +110,11 @@ void lcd_display_dir(lcd_dir_t dir) {
   lcddev.scan_dir(dir);
 }
 
-// 画点
-void lcd_draw_point(uint16_t x, uint16_t y, uint32_t color) {
-  lcddev.set_cursor(x, y); // 设置光标位置
-  lcd_write_ram_prepare(); // 开始写入 GRAM
-  LCD->ram = color;
+static void lcd_write_ram_prepare(void) {
+  LCD->reg = lcddev.wramcmd; //
 }
+
+// ==================== UI 绘制 ====================
 
 // 全屏填充颜色
 void lcd_clear(uint16_t color) {
@@ -124,31 +128,121 @@ void lcd_clear(uint16_t color) {
   }
 }
 
-// 填充实心圆
-void lcd_fill_circle(uint16_t x, uint16_t y, uint16_t r, uint16_t color) {}
-// 画圆
-void lcd_draw_circle(uint16_t x0, uint16_t y0, uint8_t r, uint16_t color) {}
-// 画水平线
-void lcd_draw_hline(uint16_t x, uint16_t y, uint16_t len, uint16_t color) {
-  if (len == 0 || x > lcddev.width || y > lcddev.height)
-    return;
-  lcd_fill(x, y, x + len - 1, y, color);
+// 画点
+static void lcd_draw_point(uint16_t x, uint16_t y, uint16_t color) {
+  lcddev.set_cursor(x, y); // 设置光标位置
+  lcd_write_ram_prepare(); // 开始写入 GRAM
+  LCD->ram = color;
 }
+
+// 纯色填充矩阵
+void lcd_fill(point_t *p1, point_t *p2, uint16_t color) {
+  for (uint16_t i = p1->y; i <= p2->y; i++) {
+    lcddev.set_cursor(p1->x, i); // 设置光标位置
+    lcd_write_ram_prepare();     // 开始写入 GRAM
+    for (uint16_t j = p1->x; j <= p2->x; j++) {
+      LCD->ram = color; // 显示颜色
+    }
+  }
+}
+// 彩色填充矩阵
+void lcd_color_fill(point_t *p1, point_t *p2, uint16_t *color) {}
+// 填充圆形
+void lcd_fill_circle(point_t *p, uint16_t r, uint16_t color) {}
+
+// 画水平线
+void lcd_draw_hline(point_t *p, uint16_t len, uint16_t color) {
+  if (len == 0 || p->x > lcddev.width || p->y > lcddev.height)
+    return;
+  point_t p2 = {p->x + len - 1, p->y};
+  lcd_fill(p, &p2, color);
+}
+// 画直线 Bresenham
+void lcd_draw_line(point_t *p1, point_t *p2, uint16_t color) {
+  int dx = p2->x - p1->x; // 坐标增量
+  int dy = p2->y - p1->y;
+
+  int incx = dx > 0 ? 1 : -1; // 步进方向
+  int incy = dy > 0 ? 1 : -1;
+
+  int err = dx - dy; // 初始误差项
+
+  uint16_t x = p1->x;
+  uint16_t y = p1->y;
+
+  while (1) {
+    lcd_draw_point(x, y, color); // 绘制当前点
+
+    if (x == p2->x && y == p2->y)
+      break; // 到达终点退出
+
+    int e2 = err << 2; // 用2*err判断符号, 避免浮点
+
+    if (e2 > -dy) { // 修正x方向
+      err -= dy;
+      x += incx;
+    }
+    if (e2 < dx) { // 修正 y 方向
+      err += dx;
+      y += incy;
+    }
+  }
+}
+// 画矩形
+void lcd_draw_rect(rect_t *rect, uint16_t color) {
+  uint16_t x1 = rect->x, x2 = rect->x + rect->width;
+  uint16_t y1 = rect->y, y2 = rect->y + rect->height;
+  point_t p1 = {x1, y1}, p2 = {x2, y1};
+  point_t p3 = {x1, y2}, p4 = {x2, y2};
+  lcd_draw_line(&p1, &p2, color);
+  lcd_draw_line(&p2, &p4, color);
+  lcd_draw_line(&p1, &p3, color);
+  lcd_draw_line(&p3, &p4, color);
+}
+// 画圆 Bresenham 算法
+void lcd_draw_circle(point_t *p, uint8_t r, uint16_t color) {
+  int x = 0;
+  int y = r;
+  int pa = 1 - r; // 初始决策参数
+
+  while (x <= y) {
+    lcd_draw_point(p->x + x, p->y + y, color); // 第一象限
+    lcd_draw_point(p->x - x, p->y + y, color); // 第二象限
+    lcd_draw_point(p->x - x, p->y - y, color); // 第三象限
+    lcd_draw_point(p->x + x, p->y - y, color); // 第四象限
+    lcd_draw_point(p->x + y, p->y + x, color); // 对称翻转
+    lcd_draw_point(p->x - y, p->y + x, color); //
+    lcd_draw_point(p->x - y, p->y - x, color); //
+    lcd_draw_point(p->x + y, p->y - x, color); //
+
+    // 根据决策参数更新
+    if (pa < 0) {
+      pa += (x << 2) + 3; // 取正右方点
+    } else {
+      pa += ((x - y) << 2) + 5; // 取右下方点
+      y--;
+    }
+    x++;
+  }
+}
+
+// 清屏
+void lcd_clear(uint16_t color);
 // 设置窗口
-void lcd_set_window(uint16_t sx, uint16_t sy, uint16_t width, uint16_t height) {
-  uint16_t ex = sx + width;
-  uint16_t ey = sy + height;
+void lcd_set_window(rect_t *rect) {
+  uint16_t ex = rect->x + rect->width;
+  uint16_t ey = rect->y + rect->height;
 
   // 左上角-X
   lcd_write_regno(lcddev.setxcmd);
-  lcd_write_data(sx >> 8);
+  lcd_write_data(rect->x >> 8);
   lcd_write_regno(lcddev.setxcmd + 1);
-  lcd_write_data(sx & 0xFF);
+  lcd_write_data(rect->x & 0xFF);
   // 左上角-Y
   lcd_write_regno(lcddev.setycmd);
-  lcd_write_data(sy >> 8);
+  lcd_write_data(rect->y >> 8);
   lcd_write_regno(lcddev.setycmd + 1);
-  lcd_write_data(sy & 0xFF);
+  lcd_write_data(rect->y & 0xFF);
 
   // 右下角-X
   lcd_write_regno(lcddev.setxcmd);
@@ -161,36 +255,15 @@ void lcd_set_window(uint16_t sx, uint16_t sy, uint16_t width, uint16_t height) {
   lcd_write_regno(lcddev.setycmd + 1);
   lcd_write_data(ey & 0xFF);
 }
-// 纯色填充矩阵
-void lcd_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey,
-              uint16_t color) {
-  for (uint16_t i = sy; i <= ey; i++) {
-    lcddev.set_cursor(sx, i); // 设置光标位置
-    lcd_write_ram_prepare();  // 开始写入 GRAM
-    for (uint16_t j = sx; j <= ex; j++) {
-      LCD->ram = color; // 显示颜色
-    }
-  }
-}
-// 彩色填充矩阵
-void lcd_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey,
-                    uint16_t *color) {}
-// 画直线
-void lcd_draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
-                   uint16_t color) {}
-// 画矩形
-void lcd_draw_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
-                   uint16_t color) {}
 
 // 显示一个字符
-void lcd_show_char(uint16_t x, uint16_t y, char ch, uint8_t size, uint8_t mode,
+void lcd_show_char(point_t *p, char ch, uint8_t size, uint8_t mode,
                    uint16_t color) {}
-// 显示数字
-void lcd_show_num(uint16_t x, uint16_t y, uint32_t num, uint8_t len,
-                  uint8_t size, uint16_t color) {}
+//  显示数字
+void lcd_show_num(point_t *p, uint32_t num, uint8_t len, uint8_t size,
+                  uint16_t color) {}
 // 扩展显示数字
-void lcd_show_xnum(uint16_t x, uint16_t y, uint32_t num, uint8_t len,
-                   uint8_t size, uint8_t mode, uint16_t color) {}
-// 显示字符串
-void lcd_show_str(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
-                  uint8_t size, char *p, uint16_t color) {}
+void lcd_show_xnum(point_t *p, uint32_t num, uint8_t len, uint8_t size,
+                   uint8_t mode, uint16_t color) {}
+//  显示字符串
+void lcd_show_str(rect_t *rect, uint8_t size, char *str, uint16_t color) {}

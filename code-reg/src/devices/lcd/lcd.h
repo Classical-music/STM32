@@ -50,9 +50,11 @@ typedef struct {
   uint16_t width;
   uint16_t height;
   uint8_t dir;
-  uint16_t wramcmd; // 开始写 gram 指令
-  uint16_t setxcmd; // 设置x坐标指令
-  uint16_t setycmd; // 设置y坐标指令
+  uint16_t disponCmd;  // 开启LCD
+  uint16_t dispoffCmd; // 关闭LCD
+  uint16_t wramcmd;    // 开始写 gram 指令
+  uint16_t setxcmd;    // 设置x坐标指令
+  uint16_t setycmd;    // 设置y坐标指令
 } lcd_dev_t;
 
 extern lcd_dev_t lcddev;
@@ -69,52 +71,65 @@ extern lcd_dev_t lcddev;
 #define LCD_BASE 0x6C0007FE
 #define LCD ((lcd_t *)LCD_BASE)
 
+// 初始化 LCD
 void lcd_init(void);
-
+// 基于 FSMC 的写 LCD 基础函数
 void lcd_write_data(volatile uint16_t data);
 void lcd_write_regno(volatile uint16_t regno);
 void lcd_write_reg(uint16_t regno, uint16_t data);
 uint16_t lcd_read_data(void);
 
-// 设置屏幕方向 横屏or竖屏
-void lcd_display_dir(lcd_dir_t dir);
+void lcd_on(void);  // 开启 LCD
+void lcd_off(void); // 关闭 LCD
 
-// 画点
-void lcd_draw_point(uint16_t x, uint16_t y, uint32_t color);
+void lcd_set_dir(lcd_dir_t dir); // 设置屏幕方向 横屏or竖屏
 
-// 全屏填充颜色
-void lcd_clear(uint16_t color);
-// 填充实心圆
-void lcd_fill_circle(uint16_t x, uint16_t y, uint16_t r, uint16_t color);
-// 画圆
-void lcd_draw_circle(uint16_t x0, uint16_t y0, uint8_t r, uint16_t color);
-// 画水平线
-void lcd_draw_hline(uint16_t x, uint16_t y, uint16_t len, uint16_t color);
-// 设置窗口
-void lcd_set_window(uint16_t sx, uint16_t sy, uint16_t width, uint16_t height);
-// 纯色填充矩阵
-void lcd_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey,
-              uint16_t color);
-// 彩色填充矩阵
-void lcd_color_fill(uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey,
-                    uint16_t *color);
-// 画直线
-void lcd_draw_line(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
-                   uint16_t color);
-// 画矩形
-void lcd_draw_rect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2,
-                   uint16_t color);
+// ==================== UI 绘制 ====================
+typedef struct {
+  uint16_t x;
+  uint16_t y;
+} point_t;
 
-// 显示一个字符
-void lcd_show_char(uint16_t x, uint16_t y, char ch, uint8_t size, uint8_t mode,
-                   uint16_t color);
-// 显示数字
-void lcd_show_num(uint16_t x, uint16_t y, uint32_t num, uint8_t len,
-                  uint8_t size, uint16_t color);
-// 扩展显示数字
-void lcd_show_xnum(uint16_t x, uint16_t y, uint32_t num, uint8_t len,
-                   uint8_t size, uint8_t mode, uint16_t color);
-// 显示字符串
-void lcd_show_str(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
-                  uint8_t size, char *p, uint16_t color);
+typedef struct {
+  uint16_t x;
+  uint16_t y;
+  uint16_t width;
+  uint16_t height;
+} rect_t;
+
+void lcd_draw_hline(point_t *p, uint16_t len, uint16_t color); // 画水平线
+void lcd_draw_line(point_t *p1, point_t *p2, uint16_t color);  // 画直线
+void lcd_draw_rect(rect_t *rect, uint16_t color);              // 画矩形
+void lcd_draw_circle(point_t *p, uint8_t r, uint16_t color);   // 画圆
+
+void lcd_fill(point_t *p1, point_t *p2, uint16_t color);        // 纯色填充矩阵
+void lcd_color_fill(point_t *p1, point_t *p2, uint16_t *color); // 彩色填充矩阵
+void lcd_fill_circle(point_t *p, uint16_t r, uint16_t color);   // 填充圆形
+
+void lcd_clear(uint16_t color);    // 清屏
+void lcd_set_window(rect_t *rect); // 设置窗口
+
+void lcd_show_char(point_t *p, char ch, uint8_t size, uint8_t mode,
+                   uint16_t color); // 显示一个字符
+void lcd_show_num(point_t *p, uint32_t num, uint8_t len, uint8_t size,
+                  uint16_t color); // 显示数字
+void lcd_show_xnum(point_t *p, uint32_t num, uint8_t len, uint8_t size,
+                   uint8_t mode, uint16_t color); // 扩展显示数字
+void lcd_show_str(rect_t *rect, uint8_t size, char *str,
+                  uint16_t color); // 显示字符串
+
+// 将 RGB888 -> RGB565
+#define RGB565_R(color) ((color >> 8) & 0xF800)
+#define RGB565_G(color) ((color >> 5) & 0x07E0)
+#define RGB565_B(color) ((color >> 3) & 0x001F)
+#define RGB565(color)                                                          \
+  (uint16_t)(RGB565_R(color) | RGB565_G(color) | RGB565_B(color))
+
+#define LCD_DRAW_HLINE(p, len, color) lcd_draw_hline(&p, len, RGB565(color))
+#define LCD_DRAW_LINE(p1, p2, color) lcd_draw_line(&p1, &p2, RGB565(color))
+#define LCD_DRAW_RECT(rect, color) lcd_draw_rect(&rect, RGB565(color))
+#define LCD_DRAW_CIRCLE(p, r, color) lcd_draw_circle(&p, r, RGB565(color))
+
+#define LCD_CLEAR(color) lcd_clear(RGB565(color))
+
 #endif

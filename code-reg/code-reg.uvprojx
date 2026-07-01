@@ -595,6 +595,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\user\test\flash_test.c</FilePath>
             </File>
+            <File>
+              <FileName>lcd_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\user\test\lcd_test.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

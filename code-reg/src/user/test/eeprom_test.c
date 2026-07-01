@@ -1,5 +1,5 @@
-#include "eeprom_test.h"
 #include "eeprom/eeprom.h"
+#include "test.h"
 
 // 测试字节读写
 static void test_rw_byte(void) {

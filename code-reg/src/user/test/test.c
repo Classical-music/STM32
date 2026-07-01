@@ -1,8 +1,11 @@
 #include "test.h"
-#include "eeprom_test.h"
-#include "flash_test.h"
+
+extern void eeprom_test(void);
+extern void flash_test(void);
+extern void lcd_test(void);
 
 void test(void) {
-  // eeprom_test(); //
-  flash_test();
+  // eeprom_test();
+  // flash_test();
+  lcd_test();
 }

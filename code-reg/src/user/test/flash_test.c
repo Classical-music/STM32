@@ -1,5 +1,5 @@
-#include "flash_test.h"
 #include "flash/flash.h"
+#include "test.h"
 
 // 测试起始地址的读写
 #define test_rw(addr, str)                                                     \
