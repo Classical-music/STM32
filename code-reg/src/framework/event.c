@@ -1,5 +1,5 @@
 #include "event.h"
-#include "queue.h"
+#include "cqueue.h"
 
 // 事件队列
 #define EVT_BUFF_SIZE 64

@@ -257,13 +257,33 @@ void lcd_set_window(rect_t *rect) {
 }
 
 // 显示一个字符
-void lcd_show_char(point_t *p, char ch, uint8_t size, uint8_t mode,
-                   uint16_t color) {}
+static const uint8_t charSet[][32] = {
+    {
+        0x00,
+    },
+};
+void lcd_show_char(point_t *p, char ch, uint16_t color) {
+  for (uint8_t i = 0; i < 16; i++) { // 行扫描
+    uint8_t rowId = i << 1;
+    uint16_t tmp =
+        (charSet[ch][rowId] << 8) | charSet[ch][rowId + 1]; // 取出这一行的2B
+    for (uint8_t j = 0; j < 16; j++) {
+      if (tmp & 0x8000) {                          // 先画高位的点
+        lcd_draw_point(p->x + j, p->y + i, color); // 1就点亮
+      }
+      tmp <<= 1;
+    }
+  }
+}
 //  显示数字
-void lcd_show_num(point_t *p, uint32_t num, uint8_t len, uint8_t size,
-                  uint16_t color) {}
+void lcd_show_num(point_t *p, uint32_t num, uint16_t color) {}
 // 扩展显示数字
-void lcd_show_xnum(point_t *p, uint32_t num, uint8_t len, uint8_t size,
-                   uint8_t mode, uint16_t color) {}
+void lcd_show_xnum(point_t *p, uint32_t num, uint16_t color) {}
 //  显示字符串
-void lcd_show_str(rect_t *rect, uint8_t size, char *str, uint16_t color) {}
+void lcd_show_str(rect_t *rect, char *str, uint16_t color) {
+  point_t p = {rect->x, rect->y};
+  while (*str) {
+    lcd_show_char(&p, *str++, color);
+    p.x += 16;
+  }
+}

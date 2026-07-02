@@ -1,6 +1,6 @@
 #include "usart.h"
+#include "cqueue.h"
 #include "gpio.h"
-#include "queue.h"
 #include "rcc.h"
 
 // RX 缓冲区

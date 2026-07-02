@@ -1,4 +1,4 @@
-#include "queue.h"
+#include "cqueue.h"
 #include <string.h>
 
 void queue_init(queue_t *q, uint8_t *buff, const uint32_t elem_size,

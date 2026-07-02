@@ -109,14 +109,10 @@ void lcd_fill_circle(point_t *p, uint16_t r, uint16_t color);   // 填充圆形
 void lcd_clear(uint16_t color);    // 清屏
 void lcd_set_window(rect_t *rect); // 设置窗口
 
-void lcd_show_char(point_t *p, char ch, uint8_t size, uint8_t mode,
-                   uint16_t color); // 显示一个字符
-void lcd_show_num(point_t *p, uint32_t num, uint8_t len, uint8_t size,
-                  uint16_t color); // 显示数字
-void lcd_show_xnum(point_t *p, uint32_t num, uint8_t len, uint8_t size,
-                   uint8_t mode, uint16_t color); // 扩展显示数字
-void lcd_show_str(rect_t *rect, uint8_t size, char *str,
-                  uint16_t color); // 显示字符串
+void lcd_show_char(point_t *p, char ch, uint16_t color);      // 显示一个字符
+void lcd_show_num(point_t *p, uint32_t num, uint16_t color);  // 显示数字
+void lcd_show_xnum(point_t *p, uint32_t num, uint16_t color); // 扩展显示数字
+void lcd_show_str(rect_t *rect, char *str, uint16_t color);   // 显示字符串
 
 // 将 RGB888 -> RGB565
 #define RGB565_R(color) ((color >> 8) & 0xF800)

@@ -1,5 +1,5 @@
 #include "timer.h"
-#include "queue.h"
+#include "cqueue.h"
 
 #define TIMER_MAX 8
 static timer_t g_timers[TIMER_MAX];
