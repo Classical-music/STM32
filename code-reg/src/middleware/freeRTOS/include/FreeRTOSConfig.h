@@ -70,6 +70,7 @@
 #define configUSE_QUEUE_SETS 0 // 队列组, 极少使用, 关闭
 
 // 延时&阻塞
+#define INCLUDE_vTaskDelay 1 // 启用 vTaskDelay
 // 启用 vTaskDelayUntil 固定周期任务
 #define configUSE_VTASKDELAY_UNTIL 1
 
@@ -82,5 +83,9 @@
 // 高级功能
 // 低功耗无嘀嗒休眠
 #define configUSE_TICKLESS_IDLE 0
+
+#define xPortPendSVHandler PendSV_Handler
+#define vPortSVCHandler SVC_Handler
+#define xPortSysTickHandler SysTick_Handler
 
 #endif

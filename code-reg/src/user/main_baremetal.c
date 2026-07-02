@@ -1,3 +1,7 @@
+#include "main_common.h"
+
+#if USE_FREERTOS == 0
+
 #include "board.h"
 #include "cmd/cmd.h"
 #include "eeprom/eeprom.h"
@@ -30,3 +34,5 @@ int main() {
     event_dispatch();
   }
 }
+
+#endif

@@ -1,5 +1,7 @@
 #include "systick.h"
 
+#if USE_FREERTOS == 0
+
 void systick_init(uint16_t freq) {
   // 清空计数器&控制寄存器
   SysTick->CTRL = 0;
@@ -21,3 +23,5 @@ void SysTick_Handler(void) {
   SysTick->CTRL;      // 读取CTRL, 清零COUNTFLAG
   hartbeat_handler(); // 执行一次心跳
 }
+
+#endif

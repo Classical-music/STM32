@@ -6,6 +6,8 @@
 #include <stddef.h>
 #include <stdio.h>
 
+#define USE_FREERTOS 1
+
 #define ARRAY_SIZE(arr) sizeof(arr) / sizeof(arr[0])
 
 #define __CONCAT(x, y) x##y
