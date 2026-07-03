@@ -1,7 +1,7 @@
 #ifndef __APP_KEY__
 #define __APP_KEY__
 
-#include "key.h"
+#include "key/key.h"
 
 void app_key_init(void);
 

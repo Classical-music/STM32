@@ -1,5 +1,5 @@
 #include "console.h"
-#include "app_beep.h"
+// #include "app_beep.h"
 #include "event.h"
 #include "timer.h"
 #include <stdio.h>
@@ -23,7 +23,7 @@ static void console_process_byte(uint8_t ch) {
       line_len--;
       printf("\b \b");
     } else {
-      playAlert();
+      //   playAlert();
     }
     break;
 
@@ -33,7 +33,7 @@ static void console_process_byte(uint8_t ch) {
       line_buff[line_len++] = ch; // 存入缓冲区
     } else {
       // 缓冲区满&丢弃&ALERT
-      playAlert();
+      //   playAlert();
     }
     break;
   }

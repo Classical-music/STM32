@@ -1,8 +1,4 @@
-#include "main_common.h"
-
-#if USE_FREERTOS == 1
-#include "FreeRTOS.h"
-#include "led.h"
+#include "led/led.h"
 #include "task.h"
 
 void vLEDTask(void *arg) {
@@ -34,5 +30,3 @@ int main(void) {
   while (1) {
   }
 }
-
-#endif

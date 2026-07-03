@@ -1,7 +1,7 @@
 #include "cmd.h"
-#include "app_led.h"
 #include "console.h"
 #include "event.h"
+#include "led/task_led.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -15,10 +15,12 @@ static void parse_cmd(char *buff, uint32_t len) {
   if (strcmp(buff, "clear") == 0) {
     exec_clear();
     return;
-  } else if (strcmp(buff, "led on") == 0) {
-    water_light_start();
-  } else if (strcmp(buff, "led off") == 0) {
-    water_light_stop();
+  } else if (strcmp(buff, "led flow") == 0) {
+    setLedMode(LED_MODE_FLOW);
+  } else if (strcmp(buff, "led breath") == 0) {
+    setLedMode(LED_MODE_BREATH);
+  } else if (strcmp(buff, "led normal") == 0) {
+    setLedMode(LED_MODE_NORMAL);
   } else {
     printf("\n%s", buff);
   }

@@ -74,6 +74,9 @@
 // 启用 vTaskDelayUntil 固定周期任务
 #define configUSE_VTASKDELAY_UNTIL 1
 
+#define INCLUDE_vTaskSuspend 1
+#define INCLUDE_xTaskDelayUntil 1
+
 // 内存分配&任务创建
 #define configSUPPORT_DYNAMIC_ALLOCATION 1 // 启用堆内存
 #define configSUPPORT_STATIC_ALLOCATION 0  // 不启用静态分配

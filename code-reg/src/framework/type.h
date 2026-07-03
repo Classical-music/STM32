@@ -1,12 +1,11 @@
 #ifndef __TYPE_H__
 #define __TYPE_H__
 
+#include "FreeRTOS.h"
 #include "stm32f10x.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
-
-#define USE_FREERTOS 1
 
 #define ARRAY_SIZE(arr) sizeof(arr) / sizeof(arr[0])
 
