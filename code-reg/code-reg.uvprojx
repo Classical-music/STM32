@@ -466,11 +466,6 @@
               <FilePath>.\src\devices\beep\beep.c</FilePath>
             </File>
             <File>
-              <FileName>console.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\devices\console.c</FilePath>
-            </File>
-            <File>
               <FileName>tpad.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\devices\tpad\tpad.c</FilePath>
@@ -540,11 +535,6 @@
         <Group>
           <GroupName>user</GroupName>
           <Files>
-            <File>
-              <FileName>cmd.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\user\cmd\cmd.c</FilePath>
-            </File>
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
@@ -652,6 +642,16 @@
               <FileName>task_key.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tasks\key\task_key.c</FilePath>
+            </File>
+            <File>
+              <FileName>task_console.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\console\task_console.c</FilePath>
+            </File>
+            <File>
+              <FileName>task_cmd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\cmd\task_cmd.c</FilePath>
             </File>
           </Files>
         </Group>

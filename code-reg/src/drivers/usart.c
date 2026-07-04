@@ -46,12 +46,10 @@ void usart_init(uint32_t baud) {
 }
 
 void usart_send_byte(uint8_t data) {
-  bool is_empty = QUEUE_ISEMPTY(tx_que);
   while (!QUEUE_PUSH(tx_que, data))
     __WFI(); // 发送缓冲区满
 
-  if (is_empty)
-    USART1->CR1 |= USART_CR1_TXEIE; // 发送器空闲, 开始发送
+  USART1->CR1 |= USART_CR1_TXEIE; // 发送器空闲, 开始发送
 }
 static void handle_txe(void) {
   uint8_t data;
@@ -64,17 +62,6 @@ static void handle_txe(void) {
 }
 
 // rx 处理
-static void handle_rx(void) {
-  uint8_t data = USART1->DR;
-  if (QUEUE_PUSH(rx_que, data)) {
-    // 发送 RX_BYTE 事件, 用于输入回显
-    if (data == '\r' || data == '\n') {
-      // 遇到换行符, 发送事件
-    }
-    return;
-  }
-  // 读缓冲满
-}
 bool usart_read_byte(uint8_t *data) {
   return QUEUE_POP(rx_que, *data); // 读rx缓冲区
 }
@@ -83,7 +70,7 @@ bool usart_read_byte(uint8_t *data) {
 void USART1_IRQHandler(void) {
   // rx 中断
   if ((USART1->CR1 & USART_CR1_RXNEIE) && (USART1->SR & USART_SR_RXNE)) {
-    handle_rx();
+    QUEUE_PUSH(rx_que, USART1->DR);
   }
 
   // txe 中断

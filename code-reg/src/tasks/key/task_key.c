@@ -2,6 +2,8 @@
 #include "key/key.h"
 #include "queue.h"
 #include "task.h"
+#include "timers.h"
+#include "tpad/tpad.h"
 
 // 时间参数
 #define DEBOUNCE_TICK 2     // 20ms
@@ -26,24 +28,14 @@ typedef struct {
   bool is_long_mode; // 标记是否已进入长按
 } KeyCtx_t;
 
-#define KEY_TOTAL (KEY_NUM + 1) // 4*key + 1*tpad
-static KeyCtx_t key_ctx[KEY_TOTAL];
+static KeyCtx_t key_ctx[KEY_NUM];
 
 QueueHandle_t xKeyQue = NULL; // 按键事件队列
 
-// 判断按键是否按下
-static bool keyIsActive(uint8_t id) {
-  if (id < KEY_NUM) {
-    return key_ispress(id);
-  } else {
-    return false;
-  }
-}
-
 static void keyScan(void) {
-  for (uint8_t id = 0; id < KEY_TOTAL; id++) {
+  for (uint8_t id = 0; id < KEY_NUM; id++) {
     KeyCtx_t *ctx = &key_ctx[id];
-    bool active = keyIsActive(id);
+    bool active = key_ispress(id);
 
     switch (ctx->state) {
     case ST_IDLE:
@@ -133,19 +125,45 @@ static void keyScan(void) {
   }
 }
 
+// ============================== tpad ==============================
+bool isIdle = true;
+uint8_t ctn = 0;
+
+static void tpadScan(void) {
+  ctn++;
+  if (isIdle) {
+    if (ctn == 5) {   // 每 50ms 启动一次扫描流程
+      isIdle = false; // 进入扫描状态
+      ctn = 0;        // 计数器归零
+      tpad_reset();   // 先放电复位
+    }
+  } else {
+    // 放电完成，扫描按钮
+    if (tpad_is_press()) {
+      // 发送事件
+      QUEUE_KEY_SEND(KEY_TPAD, TPAD_EVT_PRESSED);
+    }
+    // 扫描完成, 回到 idle 状态
+    isIdle = true;
+  }
+}
+
 static void vKeyScanTask(void *arg) {
   // 初始化 key 驱动
   key_init();
+
+  tpad_init(); // 初始化 tpad 驱动
 
   // 基准时延
   TickType_t xLastWakeTime = xTaskGetTickCount();
 
   while (1) {
-    // 每10ms 扫描一次
     vTaskDelayUntil(&xLastWakeTime, pdMS_TO_TICKS(10));
 
     // 扫描所有按键
     keyScan();
+
+    tpadScan();
   }
 }
 

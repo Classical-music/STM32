@@ -13,12 +13,9 @@
  */
 
 // 复位 & 放电
-static void tpad_reset(void) {
+void tpad_reset(void) {
   // 放电 - 配置 PA1 为推挽输出, 并输出低电平
   GPIO_MODE_SET(GPIOA, 1, GPIO_MODE_O50 | GPIO_CNF_O_Gen_PP);
-
-  // 等待放电完成
-  timer_delay_ms(5);
 
   // 清除捕获定时器
   tim_cap_reset();
@@ -82,45 +79,18 @@ static uint16_t tpad_get_base_val(void) {
   return sum / 6;
 }
 
-static void tpad_scan_timer_cb(void *arg);
-static void tpad_get_val_timer_cb(void *arg);
-
 static uint16_t g_base_val = 0;
-static timer_id_t timer_id = -1;
-static bool is_scan = false;
 
 void tpad_init(void) {
-  if (timer_id != -1)
-    return; // 已初始化
   // 初始化定时器
   tim_cap_init();
   // 计算默认捕获时长
   g_base_val = tpad_get_base_val();
-
-  is_scan = false;
-  // 启动循环定时器, 扫描 TPAD
-  timer_id = TIMER_ADD_CB(50, tpad_scan_timer_cb, NULL, true);
 }
 
-void tpad_stop(void) {
-  if (timer_id != -1) {
-    timer_del(timer_id);
-    timer_id = -1;
-  }
-}
-
-static void tpad_scan_timer_cb(void *arg) {
-  if (is_scan)
-    return; // 正在扫描 tpad
-  is_scan = true;
-  tpad_reset(); // 先放电复位
-
-  // 启动单发软定时器延时
-  TIMER_ADD_CB(10, tpad_get_val_timer_cb, NULL, false);
-}
-static void tpad_get_val_timer_cb(void *arg) {
+bool tpad_is_press(void) {
   uint16_t val = tim_cap_get_val();
   if (val > g_base_val + 100)
     printf("val: %d\n", val);
-  is_scan = false; // 扫描已完成
+  return val > g_base_val + 100;
 }

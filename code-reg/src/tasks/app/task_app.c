@@ -1,14 +1,17 @@
 #include "task_app.h"
 #include "beep/task_beep.h"
+#include "cmd/task_cmd.h"
 #include "key/task_key.h"
 #include "led/task_led.h"
 #include "task.h"
+#include <stdio.h>
 
 void vAppTask(void *arg) {
   KeyMsg_t xMsg;
   ledTaskInit();  // 创建 LED 子任务
   beepTaskInit(); // 创建 Beep 子任务
   keyTaskInit();  // 创建 Key 子任务
+  cmdTaskInit();  // 创建 console 子任务
 
   while (1) {
     if (xQueueReceive(xKeyQue, &xMsg, portMAX_DELAY) == pdFAIL)
@@ -25,6 +28,11 @@ void vAppTask(void *arg) {
       break;
     case KEY_RIGHT:
       setLedMode(LED_MODE_OFF);
+      break;
+
+    case KEY_TPAD:
+      playBeep(20);
+      led_trggle(LED_GREEN);
       break;
 
     default:
@@ -59,4 +67,12 @@ void appTaskInit(void) {
 
   // 启动调度器
   vTaskStartScheduler();
+}
+
+int fputc(int ch, FILE *f) {
+  if (ch == '\n') {
+    usart_send_byte('\r');
+  }
+  usart_send_byte(ch);
+  return ch;
 }

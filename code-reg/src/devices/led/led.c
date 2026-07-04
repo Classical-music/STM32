@@ -46,6 +46,19 @@ void led_off(uint8_t led) {
   }
 }
 
+void led_trggle(uint8_t led) {
+  switch (led) {
+  case LED_RED:
+    // tim_pwm_dutyCycle(0);
+    break;
+  case LED_GREEN:
+    GPIO_TOGGLE(GREEN_PORT, GREEN_Pin);
+    break;
+  default:
+    break;
+  }
+}
+
 // 仅支持 LED_RED
 void led_set_light(uint8_t light) {
   tim_pwm_dutyCycle(light); // 设置亮度

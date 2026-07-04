@@ -3,6 +3,7 @@
 
 #include "key/key.h"
 #include "queue.h"
+#include "tpad/tpad.h"
 #include "type.h"
 
 enum {
@@ -11,6 +12,7 @@ enum {
   KEY_EVT_LONG_PRESSED,  // 长按
   KEY_EVT_LONG_RELEASED, // 长松
   KEY_EVT_HOLD,          // hold
+  TPAD_EVT_PRESSED,      // tpad 按下
 };
 
 typedef struct {

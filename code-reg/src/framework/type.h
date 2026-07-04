@@ -24,7 +24,7 @@
 
 // 中断优先级
 typedef enum {
-  IR_PRI_0,
+  IR_PRI_0 = configLIBRARY_MAX_SYSCALL_INTERRUPT_PRIORITY,
   IR_PRI_WWDG,
   IR_PRI_USART,
   IR_PRI_TIM_CAP,
