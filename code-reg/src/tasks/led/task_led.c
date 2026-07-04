@@ -92,7 +92,7 @@ static void ledBreathStop(void) {
 
 // led 初始化
 static bool isInit = false;
-void ledInit(void) {
+void ledTaskInit(void) {
   if (isInit)
     return;
   isInit = true;
@@ -104,7 +104,14 @@ void ledInit(void) {
 
 void setLedMode(led_mode_t mode) {
   switch (mode) {
-  case LED_MODE_NORMAL:
+  case LED_MODE_ON:
+    ledFlowlightStop();
+    ledBreathStop();
+    led_on(LED_RED);
+    led_on(LED_GREEN);
+    break;
+
+  case LED_MODE_OFF:
     ledFlowlightStop();
     ledBreathStop();
     break;

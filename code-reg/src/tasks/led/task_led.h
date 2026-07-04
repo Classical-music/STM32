@@ -5,12 +5,13 @@
 
 // LED 灯模式
 typedef enum {
-  LED_MODE_NORMAL, // 普通模式
+  LED_MODE_ON,     // 常亮模式
+  LED_MODE_OFF,    // 常暗
   LED_MODE_FLOW,   // 流水灯模式
   LED_MODE_BREATH, // 呼吸灯模式
 } led_mode_t;
 
-void ledInit(void);
+void ledTaskInit(void);
 void setLedMode(led_mode_t mode);
 
 #endif

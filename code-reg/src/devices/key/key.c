@@ -1,7 +1,6 @@
 #include "key.h"
 #include "fsm.h"
 #include "gpio.h"
-#include "key_fsm.h"
 #include "rcc.h"
 #include "timer.h"
 
@@ -38,12 +37,9 @@ void key_init(void) {
   GPIO_KEY_HIGH(KEY_DOWN_Port, KEY_DOWN_Pin);
   GPIO_KEY_HIGH(KEY_LEFT_Port, KEY_LEFT_Pin);
   GPIO_KEY_HIGH(KEY_RIGHT_Port, KEY_RIGHT_Pin);
-
-  // 初始化 key 状态机
-  key_fsm_init();
 }
 // 判断是否按下
-bool key_ispress(key_id_t key) {
+bool key_ispress(uint8_t key) {
   bool ret = false;
   switch (key) {
   case KEY_UP:

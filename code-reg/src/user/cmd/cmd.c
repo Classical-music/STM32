@@ -19,8 +19,10 @@ static void parse_cmd(char *buff, uint32_t len) {
     setLedMode(LED_MODE_FLOW);
   } else if (strcmp(buff, "led breath") == 0) {
     setLedMode(LED_MODE_BREATH);
-  } else if (strcmp(buff, "led normal") == 0) {
-    setLedMode(LED_MODE_NORMAL);
+  } else if (strcmp(buff, "led on") == 0) {
+    setLedMode(LED_MODE_ON);
+  } else if (strcmp(buff, "led off") == 0) {
+    setLedMode(LED_MODE_OFF);
   } else {
     printf("\n%s", buff);
   }

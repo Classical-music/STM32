@@ -19,7 +19,6 @@ typedef enum {
 
 // 按键上下文
 typedef struct {
-  uint8_t key_id;
   KeyState_t state;
   uint8_t deb_cnt;   // 防抖计数器 0~2
   uint8_t press_cnt; // 按下持续时间
@@ -29,7 +28,8 @@ typedef struct {
 
 #define KEY_TOTAL (KEY_NUM + 1) // 4*key + 1*tpad
 static KeyCtx_t key_ctx[KEY_TOTAL];
-static QueueHandle_t evt_que = NULL;
+
+QueueHandle_t xKeyQue = NULL; // 按键事件队列
 
 // 判断按键是否按下
 static bool keyIsActive(uint8_t id) {
@@ -41,13 +41,14 @@ static bool keyIsActive(uint8_t id) {
 }
 
 static void keyScan(void) {
-  for (uint8_t i = 0; i < KEY_TOTAL; i++) {
-    KeyCtx_t *ctx = &key_ctx[i];
-    bool active = keyIsActive(ctx->key_id);
+  for (uint8_t id = 0; id < KEY_TOTAL; id++) {
+    KeyCtx_t *ctx = &key_ctx[id];
+    bool active = keyIsActive(id);
 
     switch (ctx->state) {
     case ST_IDLE:
       if (active) {
+        // 进入按下防抖中状态
         ctx->state = ST_DEB_PRESS;
         ctx->deb_cnt = DEBOUNCE_TICK;
       }
@@ -57,6 +58,7 @@ static void keyScan(void) {
         ctx->deb_cnt--;
         if (ctx->deb_cnt == 0) {
           // 防抖成功, 触发 Pressed 事件
+          QUEUE_KEY_SEND(id, KEY_EVT_PRESSED);
           ctx->state = ST_PRESSED;
           ctx->press_cnt = LONG_PRESS_TICK;
           ctx->is_long_mode = false;
@@ -72,6 +74,7 @@ static void keyScan(void) {
         ctx->press_cnt--;
         if (ctx->press_cnt == 0) {
           // 长按达到1000ms, 触发 LONG_PRESSED
+          QUEUE_KEY_SEND(id, KEY_EVT_LONG_PRESSED);
           ctx->state = ST_LONG_PRESSED;
           ctx->hold_cnt = HOLD_TICK;
           ctx->is_long_mode = true;
@@ -88,6 +91,7 @@ static void keyScan(void) {
         ctx->hold_cnt--;
         if (ctx->hold_cnt == 0) {
           // 触发hold事件
+          QUEUE_KEY_SEND(id, KEY_EVT_HOLD);
           ctx->hold_cnt = HOLD_TICK;
         }
       } else {
@@ -113,8 +117,10 @@ static void keyScan(void) {
         if (ctx->deb_cnt == 0) {
           if (ctx->is_long_mode) {
             // 触发 long_release 事件
+            QUEUE_KEY_SEND(id, KEY_EVT_LONG_RELEASED);
           } else {
             // 触发 release 事件
+            QUEUE_KEY_SEND(id, KEY_EVT_RELEASED);
           }
           ctx->state = ST_IDLE;
           ctx->is_long_mode = false;
@@ -144,6 +150,8 @@ static void vKeyScanTask(void *arg) {
 }
 
 void keyTaskInit(void) {
+  // 创建按键事件队列
+  xKeyQue = xQueueCreate(2, sizeof(KeyMsg_t));
   // 创建按键&tpad扫描任务
   xTaskCreate(vKeyScanTask, "keyScanTask", 128, NULL, 3, NULL);
 }

@@ -18,7 +18,6 @@ int main() {
 
   event_init();
   timer_init();
-  app_key_init();
   cmd_init();
   tpad_init();
   lcd_init();
@@ -26,11 +25,6 @@ int main() {
   flash_init();
 
   test();
-
-  while (1) {
-    timer_tick();
-    event_dispatch();
-  }
 }
 
 #endif

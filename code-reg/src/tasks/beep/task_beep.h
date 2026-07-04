@@ -3,7 +3,7 @@
 
 #include "type.h"
 
-void beepInit(void);
+void beepTaskInit(void);
 
 void playBeep(uint32_t period_ms);
 
