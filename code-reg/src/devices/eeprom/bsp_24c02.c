@@ -1,7 +1,7 @@
 #include "eeprom.h"
 #include "gpio.h"
 #include "i2c/i2c.h"
-#include "timer.h"
+#include "tim.h"
 
 /**
  * 24c02 相关参数
@@ -18,7 +18,7 @@
 #define RADDR_24C02 0xA1
 #define WADDR_24C02 0xA0
 
-#define DELAY_EEPROM timer_delay_ms(5)
+#define DELAY_EEPROM delay_ms(5)
 
 #if I2C_HARD
 

@@ -1,7 +1,7 @@
 #include "lcd.h"
 #include "fsmc/fsmc.h"
 #include "rcc.h"
-#include "timer.h"
+#include "tim.h"
 
 /**
  * GPIO 引脚:
@@ -64,7 +64,7 @@ void lcd_init(void) {
 
   FSMC_INIT(fsmc_ctx);
 
-  timer_delay_ms(5); // 初始化FSMC后, 必须等待一段时间
+  delay_ms(5); // 初始化FSMC后, 必须等待一段时间
 
   if (!lcddev.init())
     return;

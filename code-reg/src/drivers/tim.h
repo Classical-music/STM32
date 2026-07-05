@@ -17,4 +17,7 @@ void tim_cap_stop(void);
 uint16_t tim_cap_get_val(void);
 void tim_cap_reset(void);
 
+// TIM6 - 基本定时器
+void delay_ms(uint16_t ms);
+
 #endif

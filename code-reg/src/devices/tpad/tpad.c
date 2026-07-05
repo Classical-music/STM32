@@ -2,7 +2,6 @@
 #include "gpio.h"
 #include "rcc.h"
 #include "tim.h"
-#include "timer.h"
 
 #define TPAD_ARR_MAX 0xFFFF // 定时器ARR最大值为 0xFFFF
 #define TPAD_GATE_VAL 100   // 触摸阈值, 可调灵敏度

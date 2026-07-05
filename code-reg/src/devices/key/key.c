@@ -2,7 +2,7 @@
 #include "fsm.h"
 #include "gpio.h"
 #include "rcc.h"
-#include "timer.h"
+#include "tim.h"
 
 // keyup - pa0
 #define KEY_UP_Port GPIOA

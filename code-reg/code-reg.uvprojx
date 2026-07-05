@@ -521,11 +521,6 @@
               <FilePath>.\src\framework\fsm.c</FilePath>
             </File>
             <File>
-              <FileName>timer.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\framework\timer.c</FilePath>
-            </File>
-            <File>
               <FileName>cqueue.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\framework\cqueue.c</FilePath>

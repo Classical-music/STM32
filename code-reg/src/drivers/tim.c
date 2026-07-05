@@ -101,3 +101,20 @@ void tim_cap_reset(void) {
 }
 
 // ==================== TIM5-CH1 - PA0 输入捕获 ====================
+
+// ==================== TIM6 - 基本定时器 ====================
+void delay_ms(uint16_t ms) {
+  RCC->APB1ENR |= RCC_APB1ENR_TIM6EN; // 使能 TIM6 时钟
+
+  TIM6->PSC = SystemCoreClock / 1000 - 1; // 1kHz
+  TIM6->ARR = ms;                         // ms
+
+  TIM6->EGR |= TIM_EGR_UG;  // 更新寄存器
+  TIM6->SR &= ~TIM_SR_UIF;  // 清除中断标志
+  TIM6->CR1 |= TIM_CR1_CEN; // 启动计数器
+
+  while (!(TIM6->SR & TIM_SR_UIF))
+    ; // 等待计数完成
+
+  TIM6->CR1 &= ~TIM_CR1_CEN; // 停止计数器
+}

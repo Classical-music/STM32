@@ -1,5 +1,6 @@
 #include "console/task_console.h"
 #include "beep/task_beep.h"
+#include "board.h"
 #include "task.h"
 
 #define LINE_BUFF_SIZE 256
@@ -50,7 +51,10 @@ static void console_poll_rx() {
 
 static void vConsoleTask(void *arg) {
   // 初始化 usart 硬件
-  usart_init(115200); // 初始化 usart
+  usart_init(115200);
+
+  // 初始化 board
+  board_init();
 
   TickType_t xLasWakeTime = xTaskGetTickCount();
 

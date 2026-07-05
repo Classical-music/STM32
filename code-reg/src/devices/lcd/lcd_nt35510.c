@@ -1,5 +1,5 @@
 #include "lcd.h"
-#include "timer.h"
+#include "tim.h"
 
 static void nt35510_reginit(void) {
   lcd_write_reg(0xF000, 0x55);
@@ -457,9 +457,9 @@ static void nt35510_reginit(void) {
   lcd_write_reg(0x3A00, 0x05);
 
   lcd_write_regno(0x1100);
-  timer_delay_ms(120);
+  delay_ms(120);
   lcd_write_regno(0x2900);
-  timer_delay_ms(10);
+  delay_ms(10);
   lcd_write_regno(0x2C00);
 }
 
@@ -481,7 +481,7 @@ static bool nt35510_init(void) {
   if (lcd_id != 0x5510)
     return false;
   printf("lcd_id: 0x%x\n", lcd_id);
-  timer_delay_ms(5); // 等待复位成功
+  delay_ms(5); // 等待复位成功
 
   nt35510_reginit();
 

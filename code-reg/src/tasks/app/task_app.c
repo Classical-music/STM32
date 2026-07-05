@@ -4,6 +4,7 @@
 #include "key/task_key.h"
 #include "led/task_led.h"
 #include "task.h"
+#include "test/test.h"
 #include <stdio.h>
 
 void vAppTask(void *arg) {
@@ -12,6 +13,8 @@ void vAppTask(void *arg) {
   beepTaskInit(); // 创建 Beep 子任务
   keyTaskInit();  // 创建 Key 子任务
   cmdTaskInit();  // 创建 console 子任务
+
+  test();
 
   while (1) {
     if (xQueueReceive(xKeyQue, &xMsg, portMAX_DELAY) == pdFAIL)
