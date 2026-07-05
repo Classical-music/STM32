@@ -54,8 +54,8 @@ void tim_cap_init(void) {
   GPIO_MODE_SET(GPIOA, 1, GPIO_MODE_I | GPIO_CNF_I_Float);
 
   // 时基配置
-  TIM3->PSC = SystemCoreClock / 1000000 - 1; // 1MHz
-  TIM3->ARR = 0xFFFF; // 计数器,最大值,尽量在一个周期内不溢出
+  TIM5->PSC = SystemCoreClock / 1000000 - 1; // 1MHz
+  TIM5->ARR = 0xFFFF; // 计数器,最大值,尽量在一个周期内不溢出
 
   // 捕获/比较XX寄存器配置
   TIM5->CCMR1 &= ~TIM_CCMR1_IC2F; // 0000-不滤波
