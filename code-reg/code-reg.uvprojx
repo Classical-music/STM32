@@ -511,11 +511,6 @@
           <GroupName>framework</GroupName>
           <Files>
             <File>
-              <FileName>event.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\framework\event.c</FilePath>
-            </File>
-            <File>
               <FileName>cqueue.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\framework\cqueue.c</FilePath>
