@@ -1,5 +1,4 @@
 #include "key.h"
-#include "fsm.h"
 #include "gpio.h"
 #include "rcc.h"
 #include "tim.h"
