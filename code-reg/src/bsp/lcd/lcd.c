@@ -20,13 +20,6 @@
  * D13:15 - PD8:10
  */
 
-static fsmc_ctx_t fsmc_ctx = {
-    .bank = FSMC_Bank1,
-    .bankE = FSMC_Bank1E,
-    .neId = 4, // 使用 Bank1的NE4
-    .mwid = fsmc_mwid_16,
-};
-
 void lcd_init(void) {
   // RCC LCD_CS, LCD_RS, LCD_RW, LCD_WR, LCD_BL
   RCC_GPIO_EN(RCC_GPIOB | RCC_GPIOD | RCC_GPIOG);
@@ -50,7 +43,7 @@ void lcd_init(void) {
   GPIO_SET_MODES(GPIOE, GPIO_MODE_O50 | GPIO_CNF_O_Res_PP, 7, 8, 9, 10, 11, 12,
                  13, 14, 15);
 
-  FSMC_INIT(fsmc_ctx);
+  fsmc_ne4_init();
 
   delay_ms(5); // 初始化FSMC后, 必须等待一段时间
 
