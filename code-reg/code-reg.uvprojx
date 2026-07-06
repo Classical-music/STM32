@@ -340,7 +340,7 @@
               <MiscControls>--gnu</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\startup;.\src\drivers;.\src\bsp;.\src\framework;.\src\middleware;.\src\user;.\src\user\led;.\src\middleware\freeRTOS;.\src\middleware\freeRTOS\include;.\src\middleware\freeRTOS\portable\RVDS\ARM_CM3;.\src\tasks</IncludePath>
+              <IncludePath>.\src\startup;.\src\drivers;.\src\bsp;.\src\middleware;.\src\middleware\utils;.\src\user;.\src\user\led;.\src\middleware\freeRTOS;.\src\middleware\freeRTOS\include;.\src\middleware\freeRTOS\portable\RVDS\ARM_CM3;.\src\tasks</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -512,12 +512,12 @@
           </Files>
         </Group>
         <Group>
-          <GroupName>framework</GroupName>
+          <GroupName>middleware\utils</GroupName>
           <Files>
             <File>
               <FileName>cqueue.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\framework\cqueue.c</FilePath>
+              <FilePath>.\src\middleware\utils\cqueue.c</FilePath>
             </File>
           </Files>
         </Group>
