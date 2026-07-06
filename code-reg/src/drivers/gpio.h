@@ -57,4 +57,12 @@ typedef enum {
 
 #define GPIO_READ(port, pin) (port->IDR & (GPIO_IDR_IDR0 << pin))
 
+#define GPIO_SET_MODES(port, val, ...)                                         \
+  do {                                                                         \
+    uint8_t __pins[] = {__VA_ARGS__};                                          \
+    for (uint8_t i = 0; i < ARRAY_SIZE(__pins); i++) {                         \
+      GPIO_MODE_SET(port, __pins[i], val);                                     \
+    }                                                                          \
+  } while (0)
+
 #endif
