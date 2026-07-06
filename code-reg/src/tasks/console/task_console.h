@@ -3,7 +3,7 @@
 
 #include "FreeRTOS.h"
 #include "message_buffer.h"
-#include "usart.h"
+#include "usart/usart.h"
 
 extern MessageBufferHandle_t xConsoleBuff;
 

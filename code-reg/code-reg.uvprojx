@@ -407,22 +407,22 @@
             <File>
               <FileName>usart.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\drivers\usart.c</FilePath>
+              <FilePath>.\src\drivers\usart\usart.c</FilePath>
             </File>
             <File>
               <FileName>wwdg.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\drivers\wwdg.c</FilePath>
+              <FilePath>.\src\drivers\wwdg\wwdg.c</FilePath>
             </File>
             <File>
               <FileName>tim.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\drivers\tim.c</FilePath>
+              <FilePath>.\src\drivers\tim\tim.c</FilePath>
             </File>
             <File>
               <FileName>dma.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\drivers\dma.c</FilePath>
+              <FilePath>.\src\drivers\dma\dma.c</FilePath>
             </File>
             <File>
               <FileName>i2c_soft.c</FileName>

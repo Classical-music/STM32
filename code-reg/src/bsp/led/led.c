@@ -1,6 +1,6 @@
 #include "led.h"
 #include "rcc.h"
-#include "tim.h"
+#include "tim/tim.h"
 
 // LED_RED - PB5
 // LED_GREEN - PE5

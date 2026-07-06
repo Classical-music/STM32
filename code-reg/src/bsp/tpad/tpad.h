@@ -2,7 +2,6 @@
 #define __TPAD_H__
 
 #include "key/key.h"
-#include "tim.h"
 
 enum {
   KEY_TPAD = KEY_NUM,

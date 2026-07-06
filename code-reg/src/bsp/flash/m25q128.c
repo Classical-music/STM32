@@ -1,7 +1,6 @@
 #include "flash.h"
 #include "gpio.h"
 #include "spi/spi.h"
-#include "tim.h"
 
 // 片选
 #define CS(en)                                                                 \

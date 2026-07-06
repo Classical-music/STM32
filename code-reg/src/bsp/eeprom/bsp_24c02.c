@@ -1,7 +1,7 @@
 #include "eeprom.h"
 #include "gpio.h"
 #include "i2c/i2c.h"
-#include "tim.h"
+#include "tim/tim.h"
 
 /**
  * 24c02 相关参数

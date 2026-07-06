@@ -1,5 +1,5 @@
 #include "lcd.h"
-#include "tim.h"
+#include "tim/tim.h"
 
 static void nt35510_reginit(void) {
   lcd_write_reg(0xF000, 0x55);

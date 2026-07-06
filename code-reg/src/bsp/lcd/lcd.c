@@ -1,7 +1,7 @@
 #include "lcd.h"
 #include "fsmc/fsmc.h"
 #include "rcc.h"
-#include "tim.h"
+#include "tim/tim.h"
 
 /**
  * GPIO 引脚:
