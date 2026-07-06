@@ -642,6 +642,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\tasks\cmd\task_cmd.c</FilePath>
             </File>
+            <File>
+              <FileName>cmd.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\cmd\cmd.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

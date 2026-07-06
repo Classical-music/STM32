@@ -1,38 +1,37 @@
 #include "task_cmd.h"
+#include "cmd.h"
 #include "led/task_led.h"
 #include "task.h"
 #include <stdio.h>
 #include <string.h>
 
-static void exec_clear(void) {
-  // \033[2J - 清楚整个屏幕
-  // \033[H - 光标移动到屏幕左上角
-  printf("\033[2J\033[H");
-}
+// static void exec_clear(void) {
+//   // \033[2J - 清楚整个屏幕
+//   // \033[H - 光标移动到屏幕左上角
+//   printf("\033[2J\033[H");
+// }
 
-static void handle_cmdparse(const char *buff, size_t len) {
-  if (len <= 0) {
-    goto label1;
-  }
-  if (strcmp(buff, "clear") == 0) {
-    exec_clear();
-    goto label2;
-  } else if (strcmp(buff, "led flow") == 0) {
-    setLedMode(LED_MODE_FLOW);
-  } else if (strcmp(buff, "led breath") == 0) {
-    setLedMode(LED_MODE_BREATH);
-  } else if (strcmp(buff, "led on") == 0) {
-    setLedMode(LED_MODE_ON);
-  } else if (strcmp(buff, "led off") == 0) {
-    setLedMode(LED_MODE_OFF);
-  } else {
-    printf("\n%s", buff);
-  }
+static void handle_cmdparse(char *buff, size_t len) {
+  //   if (len <= 0) {
+  //     goto label1;
+  //   }
+  //   if (strcmp(buff, "clear") == 0) {
+  //     exec_clear();
+  //     goto label2;
+  //   } else if (strcmp(buff, "led flow") == 0) {
+  //     setLedMode(LED_MODE_FLOW);
+  //   } else if (strcmp(buff, "led breath") == 0) {
+  //     setLedMode(LED_MODE_BREATH);
+  //   } else if (strcmp(buff, "led on") == 0) {
+  //     setLedMode(LED_MODE_ON);
+  //   } else if (strcmp(buff, "led off") == 0) {
+  //     setLedMode(LED_MODE_OFF);
+  //   } else {
+  //     printf("\n%s", buff);
+  //   }
+  exec_cmd(buff);
 
-label1:
-  printf("\n");
-label2:
-  printf("hujie@ubuntu$ ");
+  printf("\nhujie@ubuntu$ ");
 }
 
 static void vCmdTask(void *arg) {
@@ -50,7 +49,7 @@ static void vCmdTask(void *arg) {
       // messageBuffer 不会自动添加 '\0'
       recv_buff[recv_len] = '\0';
     }
-    handle_cmdparse((const char *)recv_buff, recv_len);
+    handle_cmdparse((char *)recv_buff, recv_len);
   }
 }
 
