@@ -9,6 +9,10 @@ typedef enum {
   fsmc_mwid_16 = 0x10,
 } fsmc_mwid_t;
 
+// for-lcd
 void fsmc_ne4_init(void);
+
+// for-sram
+void fsmc_ne3_init(void);
 
 #endif

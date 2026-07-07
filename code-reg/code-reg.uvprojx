@@ -509,6 +509,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\bsp\lcd\lcd_nt35510.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_sram.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\sram\bsp_sram.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
