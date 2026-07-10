@@ -18,6 +18,8 @@ void bsp_sram_init(void) {
   // RCC
   RCC->APB2ENR |= RCC_APB2ENR_IOPDEN | RCC_APB2ENR_IOPEEN | RCC_APB2ENR_IOPFEN |
                   RCC_APB2ENR_IOPGEN;
+  RCC->AHBENR |= RCC_AHBENR_FSMCEN;
+
   // GPIO
   // ADDR
   GPIO_SET_MODES(GPIOF, GPIO_MODE_O50 | GPIO_CNF_O_Res_PP, 15, 14, 13, 12, 5, 4,
@@ -29,6 +31,12 @@ void bsp_sram_init(void) {
                  0);
   GPIO_SET_MODES(GPIOE, GPIO_MODE_O50 | GPIO_CNF_O_Res_PP, 15, 14, 13, 12, 11,
                  10, 9, 8, 7);
+  // OE&WE
+  GPIO_SET_MODES(GPIOD, GPIO_MODE_O50 | GPIO_CNF_O_Res_PP, 5, 4);
+  // UB&LB
+  GPIO_SET_MODES(GPIOE, GPIO_MODE_O50 | GPIO_CNF_O_Res_PP, 1, 0);
+  // CE
+  GPIO_SET_MODES(GPIOG, GPIO_MODE_O50 | GPIO_CNF_O_Res_PP, 10);
 
   fsmc_ne3_init();
 }
