@@ -91,7 +91,7 @@ static void cmd_led(char *arg) {
   } else if (strcmp(arg, "off") == 0) {
     setLedMode(LED_MODE_OFF);
   } else {
-    printf("led 未知参数: '%s'", arg);
+    printf("\nled 未知参数: '%s'", arg);
   }
   printf("\n");
 }
