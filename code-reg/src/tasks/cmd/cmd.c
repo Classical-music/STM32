@@ -55,8 +55,10 @@ const cmd_t *find_cmd(const char *name) {
 void exec_cmd(char *cmdstr) {
   // 去除首尾空格, 第一段是name
   char *name = trim(cmdstr);
-  if (*name == 0)
+  if (*name == 0) {
+    printf("\n");
     return; // 空行忽略
+  }
 
   // 第二段是参数
   char *args = strpbrk(name, " \t\r\n");
@@ -67,7 +69,7 @@ void exec_cmd(char *cmdstr) {
 
   const cmd_t *cmd = find_cmd(name);
   if (cmd == NULL) {
-    printf("\n未知命令: '%s'", name);
+    printf("\n未知命令: '%s'\n", name);
   } else {
     cmd->handler(args);
   }
@@ -89,6 +91,7 @@ static void cmd_led(char *arg) {
   } else if (strcmp(arg, "off") == 0) {
     setLedMode(LED_MODE_OFF);
   } else {
-    printf("led 未知参数: %s", arg);
+    printf("led 未知参数: '%s'", arg);
   }
+  printf("\n");
 }

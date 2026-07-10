@@ -5,33 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 
-// static void exec_clear(void) {
-//   // \033[2J - 清楚整个屏幕
-//   // \033[H - 光标移动到屏幕左上角
-//   printf("\033[2J\033[H");
-// }
-
 static void handle_cmdparse(char *buff, size_t len) {
-  //   if (len <= 0) {
-  //     goto label1;
-  //   }
-  //   if (strcmp(buff, "clear") == 0) {
-  //     exec_clear();
-  //     goto label2;
-  //   } else if (strcmp(buff, "led flow") == 0) {
-  //     setLedMode(LED_MODE_FLOW);
-  //   } else if (strcmp(buff, "led breath") == 0) {
-  //     setLedMode(LED_MODE_BREATH);
-  //   } else if (strcmp(buff, "led on") == 0) {
-  //     setLedMode(LED_MODE_ON);
-  //   } else if (strcmp(buff, "led off") == 0) {
-  //     setLedMode(LED_MODE_OFF);
-  //   } else {
-  //     printf("\n%s", buff);
-  //   }
   exec_cmd(buff);
 
-  printf("\nhujie@ubuntu$ ");
+  printf("hujie@ubuntu$ ");
 }
 
 static void vCmdTask(void *arg) {
