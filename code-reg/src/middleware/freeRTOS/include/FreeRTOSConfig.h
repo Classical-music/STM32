@@ -10,8 +10,11 @@
 
 // 栈大小单位 word(4B)
 #define configMINIMAL_STACK_SIZE ((unsigned short)256)
-// 堆内存: 64KB RAM, 预留外设栈、全局变量后, 分配32KB 2^15=0x8000
-#define configTOTAL_HEAP_SIZE ((size_t)(0x8000))
+// 堆内存: 64KB RAM, 预留外设栈、全局变量后, 分配56KB=0xE000
+#define configTOTAL_HEAP_SIZE ((size_t)(0x1E000)) // 56K + 1M
+// heap5
+#define configUSE_HEAP_5 1
+// #define configTOTAL_HEAP_SIZE ((size_t)(0xF800))
 
 // 任务优先级
 #define configMAX_PRIORITIES (10)

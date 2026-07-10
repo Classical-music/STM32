@@ -12,19 +12,19 @@
  * 5. 数据总线宽度为16bit, HADDR[25:1] -> ADDR[24:0]: 地址范围 0x00000 ~ 0xFFFFF
  * 因此 sram 地址范围: 0x68000000 ~ 0x680FFFFF
  */
-#define BSRAM_BASE 0x68000000 // 基地址
-#define BSRAM_MAX 0x680FFFFF  // 最大地址
+#define ESRAM_BASE 0x68000000 // 基地址
+#define ESRAM_SIZE 0x10000    // 1M
 
 void bsp_sram_init(void);
 
 // 16bit读写
 #define SRAM_WRITE16(addr, data)                                               \
-  (*(volatile uint16_t *)(BSRAM_BASE + (addr)) = (data))
-#define SRAM_READ16(addr) (*(volatile uint16_t *)(BSRAM_BASE + (addr)))
+  (*(volatile uint16_t *)(ESRAM_BASE + (addr)) = (data))
+#define SRAM_READ16(addr) (*(volatile uint16_t *)(ESRAM_BASE + (addr)))
 
 // 8bit读写 (8位访问需要BHE/BLE配合, 但FSMC会自动处理)
 #define SRAM_WRITE8(addr, data)                                                \
-  (*(volatile uint8_t *)(BSRAM_BASE + (addr)) = (data))
-#define SRAM_READ8(addr) (*(volatile uint8_t *)(BSRAM_BASE + (addr)))
+  (*(volatile uint8_t *)(ESRAM_BASE + (addr)) = (data))
+#define SRAM_READ8(addr) (*(volatile uint8_t *)(ESRAM_BASE + (addr)))
 
 #endif
