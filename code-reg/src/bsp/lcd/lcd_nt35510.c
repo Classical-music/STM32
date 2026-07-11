@@ -494,7 +494,7 @@ static void nt35510_scan_dir(lcd_dir_t dir) {
   // 根据扫描方式 设置 0X36/0X3600 寄存器 bit 5,6,7 位的值
   switch (dir) {
   case LCD_DIR_VERT: // 竖屏
-    regval = 0xe0;
+    regval = 0x0 << 5;
     break;
 
   case LCD_DIR_HOR: // 横屏
@@ -542,7 +542,7 @@ lcd_dev_t lcddev = {
     .set_cursor = nt35510_set_cursor,
     .width = 480,
     .height = 800,
-    .dir = 0,
+    .dir = 0xFF,
     .disponCmd = 0x2900,  // 开启LCD
     .dispoffCmd = 0x2800, // 关闭LCD
     .wramcmd = 0X2C00,
