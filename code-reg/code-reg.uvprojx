@@ -609,6 +609,11 @@
               <FilePath>.\src\middleware\freeRTOS\portable\MemMang\heap_5.c</FilePath>
             </File>
             <File>
+              <FileName>heap_5_realloc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\middleware\freeRTOS\portable\MemMang\heap_5_realloc.c</FilePath>
+            </File>
+            <File>
               <FileName>port.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\middleware\freeRTOS\portable\RVDS\ARM_CM3\port.c</FilePath>
@@ -652,6 +657,11 @@
               <FileName>cmd.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tasks\cmd\cmd.c</FilePath>
+            </File>
+            <File>
+              <FileName>task_gui.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\gui\task_gui.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1214,9 +1224,9 @@
               <FilePath>.\src\middleware\lvgl\src\misc\lv_utils.c</FilePath>
             </File>
             <File>
-              <FileName>lv_port_disp_template.c</FileName>
+              <FileName>lv_port_disp.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\middleware\lvgl\examples\porting\lv_port_disp_template.c</FilePath>
+              <FilePath>.\src\middleware\lvgl\lv_port_disp.c</FilePath>
             </File>
             <File>
               <FileName>lv_port_fs_template.c</FileName>
@@ -1232,6 +1242,11 @@
               <FileName>lv_extra.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\middleware\lvgl\src\extra\lv_extra.c</FilePath>
+            </File>
+            <File>
+              <FileName>lv_theme_default.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\middleware\lvgl\src\extra\themes\default\lv_theme_default.c</FilePath>
             </File>
           </Files>
         </Group>

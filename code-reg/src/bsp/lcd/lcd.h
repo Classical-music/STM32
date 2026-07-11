@@ -97,6 +97,8 @@ typedef struct {
   uint16_t height;
 } rect_t;
 
+void lcd_draw_point(uint16_t x, uint16_t y, uint16_t color); // 画点
+
 void lcd_draw_hline(point_t *p, uint16_t len, uint16_t color); // 画水平线
 void lcd_draw_line(point_t *p1, point_t *p2, uint16_t color);  // 画直线
 void lcd_draw_rect(rect_t *rect, uint16_t color);              // 画矩形

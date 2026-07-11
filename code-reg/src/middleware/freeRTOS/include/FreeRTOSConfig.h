@@ -37,7 +37,7 @@
 // 启用空闲任务钩子
 #define configUSE_IDLE_HOOK 0 // 暂时关闭
 // Tick 钩子, 一般关闭, 高精度计时再开
-#define configUSE_TICK_HOOK 0
+#define configUSE_TICK_HOOK 1
 // 低功耗特殊HOOK, 普通F1不用
 #define configUSE_PASSIVE_IDLE_HOOK 0
 // 启用任务通知 (轻量信号量, 比二值信号量省内存)
@@ -93,5 +93,8 @@
 #define xPortPendSVHandler PendSV_Handler
 #define vPortSVCHandler SVC_Handler
 #define xPortSysTickHandler SysTick_Handler
+
+// 自定义 realloc
+extern void *pvPortRealloc(void *ptr, size_t new_size);
 
 #endif

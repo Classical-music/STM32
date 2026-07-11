@@ -110,7 +110,7 @@ void lcd_clear(uint16_t color) {
 }
 
 // 画点
-static void lcd_draw_point(uint16_t x, uint16_t y, uint16_t color) {
+void lcd_draw_point(uint16_t x, uint16_t y, uint16_t color) {
   lcddev.set_cursor(x, y); // 设置光标位置
   lcd_write_ram_prepare(); // 开始写入 GRAM
   LCD->ram = color;

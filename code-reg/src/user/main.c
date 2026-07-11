@@ -1,4 +1,5 @@
 #include "app/task_app.h"
+#include "lcd/lcd.h"
 #include "sram/bsp_sram.h"
 
 // 内部SRAM 64KB, 预留外设栈、全局变量后, 分配56KB=0xE000
@@ -15,6 +16,8 @@ const HeapRegion_t xHeapRegions[] = {
 
 int main(void) {
   vPortDefineHeapRegions(xHeapRegions);
+
+  lcd_init(); // 初始化 LCD
 
   appTaskInit(); //
 }

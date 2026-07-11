@@ -51,7 +51,7 @@ static void init_24c02(void) {
 static uint8_t read_byte_24c02(uint8_t addr) {
   // 发送起始信号
   if (!I2C_START(i2c_ctx)) {
-    printf("%s:%d i2c_start failed\n", __FILE__, __LINE__);
+    // printf("%s:%d i2c_start failed\n", __FILE__, __LINE__);
     return 0;
   }
 
@@ -132,7 +132,7 @@ static void read_24c02(uint8_t addr, uint8_t *buff, uint16_t size) {
 
   // 重新发送起始信号
   if (!I2C_START(i2c_ctx)) {
-    printf("%s:%d i2c_start failed\n", __FILE__, __LINE__);
+    // printf("%s:%d i2c_start failed\n", __FILE__, __LINE__);
     I2C_STOP(i2c_ctx);
     return;
   }
@@ -193,7 +193,7 @@ static void write_24c02(uint8_t addr, uint8_t *buff, uint16_t size) {
   }
   uint8_t offset = addr & 0x7; // 页内地址
   uint8_t remain = 8 - offset; // 页内剩余大小
-  printf("addr:%d size:%d\n", addr, size);
+  // printf("addr:%d size:%d\n", addr, size);
 
   while (1) {
     if (remain >= size) {

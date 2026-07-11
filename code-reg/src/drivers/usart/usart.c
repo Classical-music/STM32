@@ -2,6 +2,7 @@
 #include "cqueue.h"
 #include "gpio.h"
 #include "rcc.h"
+#include <stdio.h>
 
 // RX 缓冲区
 #define RX_BUFF_SIZE 256
@@ -59,6 +60,14 @@ static void handle_txe(void) {
   }
   // TX 缓冲区空, 关闭 TXE
   USART1->CR1 &= ~USART_CR1_TXEIE;
+}
+
+int fputc(int ch, FILE *f) {
+  if (ch == '\n') {
+    usart_send_byte('\r');
+  }
+  usart_send_byte(ch);
+  return ch;
 }
 
 // rx 处理

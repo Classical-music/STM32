@@ -64,7 +64,7 @@ static bool flash_check_id(void) {
   id |= spi_rw(0x00) << 8; // Memory Type
   id |= spi_rw(0x00);      // Memory Density
   CS(false);
-  printf("JedecID: %x\n", id);
+  // printf("JedecID: %x\n", id);
 
   return id == 0x522118;
 }

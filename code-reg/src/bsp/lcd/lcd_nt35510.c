@@ -480,7 +480,7 @@ static bool nt35510_init(void) {
   lcd_id |= lcd_read_data(); // 读回 0x10
   if (lcd_id != 0x5510)
     return false;
-  printf("lcd_id: 0x%x\n", lcd_id);
+  // printf("lcd_id: 0x%x\n", lcd_id);
   delay_ms(5); // 等待复位成功
 
   nt35510_reginit();

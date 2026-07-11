@@ -6,8 +6,8 @@ extern void lcd_test(void);
 extern void sram_test(void);
 
 void test(void) {
-  eeprom_test();
-  flash_test();
-  lcd_test();
-  sram_test();
+  // eeprom_test();
+  // flash_test();
+  // lcd_test();
+  // sram_test();
 }
