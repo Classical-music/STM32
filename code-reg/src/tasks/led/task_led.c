@@ -96,8 +96,6 @@ void ledTaskInit(void) {
   if (isInit)
     return;
   isInit = true;
-  // 初始 LED 驱动
-  led_init();
   // 流水灯-初始化
   ledFlowlightInit();
 }

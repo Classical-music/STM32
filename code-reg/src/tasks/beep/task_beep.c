@@ -9,7 +9,6 @@ static void vBeepTimerHandler(TimerHandle_t xTimer) {
 }
 
 void beepTaskInit(void) {
-  beep_init();
   xBeepTimer = xTimerCreate("beepTimer", 100, pdFALSE, NULL, vBeepTimerHandler);
 }
 

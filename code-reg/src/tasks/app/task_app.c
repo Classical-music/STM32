@@ -1,6 +1,7 @@
 #include "task_app.h"
 #include "beep/task_beep.h"
 #include "cmd/task_cmd.h"
+#include "console/task_console.h"
 #include "gui/task_gui.h"
 #include "key/task_key.h"
 #include "led/task_led.h"
@@ -9,12 +10,6 @@
 
 void vAppTask(void *arg) {
   KeyMsg_t xMsg;
-  ledTaskInit();  // 创建 LED 子任务
-  beepTaskInit(); // 创建 Beep 子任务
-  keyTaskInit();  // 创建 Key 子任务
-  cmdTaskInit();  // 创建 console 子任务
-  taskGuiInit();  // 创建 gui 子任务
-
   while (1) {
     if (xQueueReceive(xKeyQue, &xMsg, portMAX_DELAY) == pdFAIL)
       continue;
@@ -65,6 +60,13 @@ void vAppTask(void *arg) {
 }
 
 void appTaskInit(void) {
+  ledTaskInit();     // 创建 LED 子任务
+  beepTaskInit();    // 创建 Beep 子任务
+  keyTaskInit();     // 创建 Key 子任务
+  taskConsoleInit(); // 创建 console 子任务
+  cmdTaskInit();     // 创建 cmd 子任务
+  taskGuiInit();     // 创建 gui 子任务
+
   xTaskCreate(vAppTask, "appTask", 128, NULL, 2, NULL); // 创建APP任务
 
   // 启动调度器

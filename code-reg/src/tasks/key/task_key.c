@@ -149,11 +149,6 @@ static void tpadScan(void) {
 }
 
 static void vKeyScanTask(void *arg) {
-  // 初始化 key 驱动
-  key_init();
-
-  tpad_init(); // 初始化 tpad 驱动
-
   // 基准时延
   TickType_t xLastWakeTime = xTaskGetTickCount();
 

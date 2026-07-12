@@ -12,7 +12,6 @@ static void handle_cmdparse(char *buff, size_t len) {
 }
 
 static void vCmdTask(void *arg) {
-  taskConsoleInit(); //
   uint8_t recv_buff[256];
   size_t recv_len;
 

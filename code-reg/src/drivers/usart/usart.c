@@ -19,6 +19,7 @@ void usart_init(uint32_t baud) {
   QUEUE_INIT(rx_que, rx_buff);
   QUEUE_INIT(tx_que, tx_buff);
 
+  RCC->APB2ENR |= RCC_APB2ENR_IOPAEN;
   RCC_USART_EN(RCC_USART1);
 
   // 输入模式 PA9-TX 复用推挽输出50M

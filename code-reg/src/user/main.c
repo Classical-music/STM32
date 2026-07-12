@@ -1,7 +1,7 @@
 #include "app/task_app.h"
-#include "lcd/lcd.h"
+#include "board.h"
 #include "sram/bsp_sram.h"
-#include "touch/touch.h"
+#include "test/test.h"
 
 // 内部SRAM 64KB, 预留外设栈、全局变量后, 分配56KB=0xE000
 #define HEAP5_START ((uint8_t *)0x20002000) // 偏移8k
@@ -18,8 +18,9 @@ const HeapRegion_t xHeapRegions[] = {
 int main(void) {
   vPortDefineHeapRegions(xHeapRegions);
 
-  lcd_init();   // 初始化 LCD
-  touch_init(); // 初始化触摸屏
+  // 初始化 board
+  board_init();
+  test();
 
   appTaskInit(); //
 }
