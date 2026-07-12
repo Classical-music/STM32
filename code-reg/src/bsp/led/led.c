@@ -46,7 +46,7 @@ void led_off(uint8_t led) {
   }
 }
 
-void led_trggle(uint8_t led) {
+void led_toggle(uint8_t led) {
   switch (led) {
   case LED_RED:
     // tim_pwm_dutyCycle(0);

@@ -506,6 +506,16 @@
               <FilePath>.\src\bsp\lcd\lcd_nt35510.c</FilePath>
             </File>
             <File>
+              <FileName>touch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\touch\touch.c</FilePath>
+            </File>
+            <File>
+              <FileName>gt9147.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\touch\gt9147.c</FilePath>
+            </File>
+            <File>
               <FileName>bsp_sram.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\bsp\sram\bsp_sram.c</FilePath>

@@ -28,6 +28,7 @@ typedef enum {
   IR_PRI_WWDG,
   IR_PRI_USART,
   IR_PRI_TIM_CAP,
+  IR_PRI_TOUCH, // 触摸屏中断
 } ir_pri_t;
 
 #endif

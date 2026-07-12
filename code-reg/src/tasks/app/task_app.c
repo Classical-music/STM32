@@ -34,7 +34,7 @@ void vAppTask(void *arg) {
 
     case KEY_TPAD:
       playBeep(20);
-      led_trggle(LED_GREEN);
+      led_toggle(LED_GREEN);
       break;
 
     default:
