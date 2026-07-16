@@ -673,6 +673,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\tasks\gui\task_gui.c</FilePath>
             </File>
+            <File>
+              <FileName>task_touch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\gui\task_touch.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -1239,14 +1244,9 @@
               <FilePath>.\src\middleware\lvgl\lv_port_disp.c</FilePath>
             </File>
             <File>
-              <FileName>lv_port_fs_template.c</FileName>
+              <FileName>lv_port_indev.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\middleware\lvgl\examples\porting\lv_port_fs_template.c</FilePath>
-            </File>
-            <File>
-              <FileName>lv_port_indev_template.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\middleware\lvgl\examples\porting\lv_port_indev_template.c</FilePath>
+              <FilePath>.\src\middleware\lvgl\lv_port_indev.c</FilePath>
             </File>
             <File>
               <FileName>lv_extra.c</FileName>

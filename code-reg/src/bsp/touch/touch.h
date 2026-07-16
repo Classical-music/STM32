@@ -12,6 +12,7 @@ typedef enum {
 // 触摸屏
 typedef struct {
   bool (*init)(void);
+  bool (*read)(uint16_t *x, uint16_t *y);
   void (*scan_dir)(touch_dir_t);
   void (*adjust)(void); // 触摸屏校准
 } touch_t;
@@ -19,5 +20,7 @@ typedef struct {
 extern touch_t touch;
 
 void touch_init(void);
+
+bool touch_read(uint16_t *x, uint16_t *y);
 
 #endif

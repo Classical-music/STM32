@@ -2,6 +2,7 @@
 #include "lcd/lcd.h"
 #include "led/led.h"
 #include "lv_port_disp.h"
+#include "lv_port_indev.h"
 #include "task.h"
 
 void vApplicationTickHook(void) {
@@ -14,6 +15,8 @@ void vGuiTask(void *arg) {
   lv_init();
   // 初始化显示驱动
   lv_port_disp_init();
+  // 初始化输入驱动
+  lv_port_indev_init();
 
   // /* 创建测试控件：一个带标签的按钮 */
   lv_obj_t *btn = lv_btn_create(lv_scr_act());

@@ -1,4 +1,5 @@
 #include "gpio.h"
+#include "gui/task_touch.h"
 #include "i2c/i2c.h"
 #include "tim/tim.h"
 #include "touch.h"
@@ -59,15 +60,20 @@ static void INT_Init_IR(void) {
 
 void EXTI15_10_IRQHandler() {
   if (EXTI->PR & EXTI_PR_PR10) {
+    // 释放信号量, 唤醒 touch 任务
+    if (xTouchSemaph)
+      xSemaphoreGiveFromISR(xTouchSemaph, NULL);
+
+    // 清除中断标志
     EXTI->PR = EXTI_PR_PR10;
-    // 读取 0x814E
-    uint8_t temp;
-    gt9147_i2c_read(0X814E, &temp, 1);
-    if ((temp & 0x80) && ((temp & 0xF) <= 5)) {
-      temp = 0;
-      gt9147_i2c_write(0x814E, &temp, 1); // 清除标志
-    }
-    led_toggle(LED_GREEN);
+    // // 读取 0x814E
+    // uint8_t temp;
+    // gt9147_i2c_read(0X814E, &temp, 1);
+    // if ((temp & 0x80) && ((temp & 0xF) <= 5)) {
+    //   temp = 0;
+    //   gt9147_i2c_write(0x814E, &temp, 1); // 清除标志
+    // }
+    // led_toggle(LED_GREEN);
   }
 }
 
@@ -210,8 +216,32 @@ static bool gt9147_init(void) {
   return true;
 }
 
+static bool gt9147_read(uint16_t *x, uint16_t *y) {
+  // 读取状态寄存器 0x814E
+  uint8_t status;
+  gt9147_i2c_read(0X814E, &status, 1);
+  if ((status & 0x80) && ((status & 0xF) <= 5)) {
+    // 有新的触摸
+
+    // 清除状态寄存器
+    uint8_t temp = 0;
+    gt9147_i2c_write(0x814E, &temp, 1); // 清除标志
+
+    // 读取坐标数据寄存器(暂时仅读取第一个)
+    uint32_t pos;
+    gt9147_i2c_read(0x8150, (uint8_t *)&pos, 4);
+    *x = pos & 0xFFFF;
+    *y = pos >> 16;
+
+    return true; // 有按下
+  }
+
+  return false; // 未按下
+}
+
 touch_t touch = {
     .init = gt9147_init,
+    .read = gt9147_read,
     .scan_dir = NULL,
     .adjust = NULL,
 };
