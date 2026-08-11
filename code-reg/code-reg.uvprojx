@@ -506,14 +506,14 @@
               <FilePath>.\src\bsp\lcd\lcd_nt35510.c</FilePath>
             </File>
             <File>
-              <FileName>touch.c</FileName>
+              <FileName>bsp_touch.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\bsp\touch\touch.c</FilePath>
+              <FilePath>.\src\bsp\touch\bsp_touch.c</FilePath>
             </File>
             <File>
-              <FileName>gt9147.c</FileName>
+              <FileName>gt911.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\bsp\touch\gt9147.c</FilePath>
+              <FilePath>.\src\bsp\touch\gt911.c</FilePath>
             </File>
             <File>
               <FileName>bsp_sram.c</FileName>
@@ -672,6 +672,11 @@
               <FileName>task_gui.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tasks\gui\task_gui.c</FilePath>
+            </File>
+						<File>
+              <FileName>views.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\gui\views\views.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -1244,9 +1249,9 @@
               <FilePath>.\src\middleware\lvgl\examples\porting\lv_port_fs_template.c</FilePath>
             </File>
             <File>
-              <FileName>lv_port_indev_template.c</FileName>
+              <FileName>lv_port_indev.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\middleware\lvgl\examples\porting\lv_port_indev_template.c</FilePath>
+              <FilePath>.\src\middleware\lvgl\lv_port_indev.c</FilePath>
             </File>
             <File>
               <FileName>lv_extra.c</FileName>

@@ -1,11 +1,12 @@
+#include "bsp_touch.h"
 #include "gpio.h"
 #include "i2c/i2c.h"
+#include "lcd/lcd.h"
 #include "tim/tim.h"
-#include "touch.h"
 #include <string.h>
 
-static void gt9147_i2c_write(uint16_t addr, uint8_t *buff, uint8_t len);
-static void gt9147_i2c_read(uint16_t addr, uint8_t *buff, uint8_t len);
+static void gt911_i2c_write(uint16_t addr, uint8_t *buff, uint8_t len);
+static void gt911_i2c_read(uint16_t addr, uint8_t *buff, uint8_t len);
 
 /**
  * 引脚
@@ -19,7 +20,7 @@ static void gt9147_i2c_read(uint16_t addr, uint8_t *buff, uint8_t len);
 #define W_TOUCH_ADDR 0xBA
 #define R_TOUCH_ADDR 0xBB
 
-static void gt9147_start(void) {
+static void gt911_start(void) {
   // RCC
   RCC->APB2ENR |= RCC_APB2ENR_IOPFEN;
   // gpio
@@ -37,7 +38,6 @@ static void gt9147_start(void) {
 }
 
 // ============================== INT ==============================
-#include "led/led.h"
 // INT - T_PEN - PF10 - 浮空输入 + 中断检测
 static void INT_Init_IR(void) {
   // RCC
@@ -57,18 +57,47 @@ static void INT_Init_IR(void) {
   NVIC_EnableIRQ(EXTI15_10_IRQn);
 }
 
+static volatile bool gt911_touched = false;
+static volatile uint16_t gt911_x = 0;
+static volatile uint16_t gt911_y = 0;
+
 void EXTI15_10_IRQHandler() {
   if (EXTI->PR & EXTI_PR_PR10) {
-    EXTI->PR = EXTI_PR_PR10;
+    EXTI->PR = EXTI_PR_PR10; // 清除硬件中断标志
+
     // 读取 0x814E
-    uint8_t temp;
-    gt9147_i2c_read(0X814E, &temp, 1);
-    if ((temp & 0x80) && ((temp & 0xF) <= 5)) {
-      temp = 0;
-      gt9147_i2c_write(0x814E, &temp, 1); // 清除标志
+    uint8_t status;
+    gt911_i2c_read(0X814E, &status, 1);
+    if (status & 0x80) { // 有中断
+      uint8_t touch_num = status & 0x0F;
+      if (touch_num > 0 && touch_num <= 5) {
+        // 读取第一个触摸点坐标，假设是0x8150和0x8152
+        uint8_t buf[6];
+        gt911_i2c_read(0x8150, buf, 6); // 读取第一个点，共6字节
+        // 组合坐标 (低字节在前)
+        gt911_x = ((uint16_t)buf[1] << 8) | buf[0];
+        gt911_y = ((uint16_t)buf[3] << 8) | buf[2];
+        gt911_touched = true;
+      } else {
+        gt911_touched = false;
+      }
+
+      // 清除中断标志（写0到0x814E）
+      uint8_t clear = 0;
+      gt911_i2c_write(0x814E, &clear, 1);
     }
-    led_toggle(LED_GREEN);
   }
+}
+
+// 判断是否按下
+static bool gt911_is_pressed(void) {
+  return gt911_touched; //
+}
+
+// 获取坐标
+static void gt911_get_xy(int32_t *x, int32_t *y) {
+  *x = gt911_x;
+  *y = gt911_y;
 }
 
 // ============================== I2C ==============================
@@ -83,7 +112,7 @@ static i2c_ctx_t i2c_ctx = {
     .sda_pin = 9,
 };
 
-static void gt9147_i2c_init(void) {
+static void gt911_i2c_init(void) {
   RCC->APB2ENR |= RCC_APB2ENR_IOPBEN | RCC_APB2ENR_IOPFEN;
 
   // gpio 模式
@@ -94,7 +123,7 @@ static void gt9147_i2c_init(void) {
   I2C_INIT(i2c_ctx);
 }
 
-static void gt9147_i2c_read(uint16_t addr, uint8_t *buff, uint8_t len) {
+static void gt911_i2c_read(uint16_t addr, uint8_t *buff, uint8_t len) {
   // 发送起始信息
   if (!I2C_START(i2c_ctx)) {
     printf("%s:%d i2c_start failed\n", __FILE__, __LINE__);
@@ -144,7 +173,7 @@ static void gt9147_i2c_read(uint16_t addr, uint8_t *buff, uint8_t len) {
   I2C_STOP(i2c_ctx);
 }
 
-static void gt9147_i2c_write(uint16_t addr, uint8_t *buff, uint8_t len) {
+static void gt911_i2c_write(uint16_t addr, uint8_t *buff, uint8_t len) {
   // 发出 start 信号
   if (!I2C_START(i2c_ctx)) {
     return;
@@ -178,9 +207,9 @@ static void gt9147_i2c_write(uint16_t addr, uint8_t *buff, uint8_t len) {
 }
 
 // ============================== 芯片功能 ==============================
-static bool gt9147_check_id(void) {
+static bool gt911_check_id(void) {
   uint8_t buff[4] = {0};
-  gt9147_i2c_read(0x8140, buff, 4); //
+  gt911_i2c_read(0x8140, buff, 4); //
   if (strcmp((const char *)buff, "911") != 0) {
     printf("touchId: %s %x\n", buff, buff[3]);
     return false;
@@ -189,20 +218,20 @@ static bool gt9147_check_id(void) {
   return true;
 }
 
-static bool gt9147_init(void) {
-  gt9147_start(); // 上电复位
+static bool gt911_init(void) {
+  gt911_start(); // 上电复位
 
-  gt9147_i2c_init();
-  if (!gt9147_check_id())
+  gt911_i2c_init();
+  if (!gt911_check_id())
     return false;
 
   uint8_t temp = 0x02;
-  gt9147_i2c_write(0x8040, &temp, 1); // 软复位
+  gt911_i2c_write(0x8040, &temp, 1); // 软复位
   delay_ms(10);
   temp = 0x00;
-  gt9147_i2c_write(0x8040, &temp, 1); // 软复位结束, 进入读坐标状态
+  gt911_i2c_write(0x8040, &temp, 1); // 软复位结束, 进入读坐标状态
 
-  gt9147_i2c_read(0x804D, &temp, 1);
+  gt911_i2c_read(0x804D, &temp, 1);
   printf("0x804D = %x\n", temp);
 
   INT_Init_IR(); // INT 初始化为中断方式
@@ -211,7 +240,7 @@ static bool gt9147_init(void) {
 }
 
 touch_t touch = {
-    .init = gt9147_init,
-    .scan_dir = NULL,
-    .adjust = NULL,
+    .init = gt911_init,
+    .is_pressed = gt911_is_pressed,
+    .get_xy = gt911_get_xy,
 };

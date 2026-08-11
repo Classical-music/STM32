@@ -6,7 +6,7 @@
 #include "lcd/lcd.h"
 #include "led/led.h"
 #include "sram/bsp_sram.h"
-#include "touch/touch.h"
+#include "touch/bsp_touch.h"
 #include "tpad/tpad.h"
 #include "usart/usart.h"
 #include "wwdg/wwdg.h"
