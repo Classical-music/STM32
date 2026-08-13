@@ -19,7 +19,7 @@ void vGuiTask(void *arg) {
   // 初始化触摸驱动
   lv_port_indev_init();
 
-  views_init(); // 初始化视图
+  views_init(); // 初始化视图（现在会通过 router 导航）
 
   while (1) {
     lv_task_handler(); // 处理 LVGL 绘制

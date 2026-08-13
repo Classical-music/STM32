@@ -673,10 +673,25 @@
               <FileType>1</FileType>
               <FilePath>.\src\tasks\gui\task_gui.c</FilePath>
             </File>
-						<File>
+            <File>
               <FileName>views.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tasks\gui\views\views.c</FilePath>
+            </File>
+            <File>
+              <FileName>router.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\gui\common\router.c</FilePath>
+            </File>
+            <File>
+              <FileName>home.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\gui\pages\home.c</FilePath>
+            </File>
+            <File>
+              <FileName>system_bar.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\gui\common\system_bar.c</FilePath>
             </File>
           </Files>
         </Group>
