@@ -188,19 +188,9 @@ void disp_disable_update(void) { disp_flush_enabled = false; }
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area,
                        lv_color_t *color_p) {
   if (disp_flush_enabled) {
-    /*The most simple case (but also the slowest) to put all pixels to the
-     * screen one-by-one*/
-
-    int32_t x;
-    int32_t y;
-    for (y = area->y1; y <= area->y2; y++) {
-      for (x = area->x1; x <= area->x2; x++) {
-        /*Put a pixel to the display. For example:*/
-        /*put_px(x, y, *color_p)*/
-        lcd_draw_point(x, y, color_p->full);
-        color_p++;
-      }
-    }
+    point_t p1 = {(uint16_t)area->x1, (uint16_t)area->y1};
+    point_t p2 = {(uint16_t)area->x2, (uint16_t)area->y2};
+    lcd_color_fill(&p1, &p2, (const uint16_t *)color_p);
   }
 
   /*IMPORTANT!!!

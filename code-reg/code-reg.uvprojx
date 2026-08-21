@@ -674,6 +674,11 @@
               <FilePath>.\src\tasks\gui\task_gui.c</FilePath>
             </File>
             <File>
+              <FileName>task_touch.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\touch\task_touch.c</FilePath>
+            </File>
+            <File>
               <FileName>views.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tasks\gui\views\views.c</FilePath>

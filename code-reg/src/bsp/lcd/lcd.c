@@ -127,7 +127,24 @@ void lcd_fill(point_t *p1, point_t *p2, uint16_t color) {
   }
 }
 // 彩色填充矩阵
-void lcd_color_fill(point_t *p1, point_t *p2, uint16_t *color) {}
+void lcd_color_fill(point_t *p1, point_t *p2, const uint16_t *color) {
+  if (p1->x > p2->x || p1->y > p2->y || p2->x >= lcddev.width ||
+      p2->y >= lcddev.height)
+    return;
+
+  rect_t rect = {
+      .x = p1->x,
+      .y = p1->y,
+      .width = p2->x - p1->x + 1,
+      .height = p2->y - p1->y + 1,
+  };
+  uint32_t point = (uint32_t)rect.width * rect.height;
+
+  lcd_set_window(&rect);
+  lcd_write_ram_prepare();
+  while (point--)
+    LCD->ram = *color++;
+}
 // 填充圆形
 void lcd_fill_circle(point_t *p, uint16_t r, uint16_t color) {}
 
@@ -211,29 +228,26 @@ void lcd_draw_circle(point_t *p, uint8_t r, uint16_t color) {
 void lcd_clear(uint16_t color);
 // 设置窗口
 void lcd_set_window(rect_t *rect) {
-  uint16_t ex = rect->x + rect->width;
-  uint16_t ey = rect->y + rect->height;
+  uint16_t ex = rect->x + rect->width - 1;
+  uint16_t ey = rect->y + rect->height - 1;
 
-  // 左上角-X
+  // 设置窗口
   lcd_write_regno(lcddev.setxcmd);
   lcd_write_data(rect->x >> 8);
   lcd_write_regno(lcddev.setxcmd + 1);
   lcd_write_data(rect->x & 0xFF);
-  // 左上角-Y
+  lcd_write_regno(lcddev.setxcmd + 2);
+  lcd_write_data(ex >> 8);
+  lcd_write_regno(lcddev.setxcmd + 3);
+  lcd_write_data(ex & 0xFF);
+
   lcd_write_regno(lcddev.setycmd);
   lcd_write_data(rect->y >> 8);
   lcd_write_regno(lcddev.setycmd + 1);
   lcd_write_data(rect->y & 0xFF);
-
-  // 右下角-X
-  lcd_write_regno(lcddev.setxcmd);
-  lcd_write_data(ex >> 8);
-  lcd_write_regno(lcddev.setxcmd + 1);
-  lcd_write_data(ex & 0xFF);
-  // 右下角-Y
-  lcd_write_regno(lcddev.setycmd);
+  lcd_write_regno(lcddev.setycmd + 2);
   lcd_write_data(ey >> 8);
-  lcd_write_regno(lcddev.setycmd + 1);
+  lcd_write_regno(lcddev.setycmd + 3);
   lcd_write_data(ey & 0xFF);
 }
 

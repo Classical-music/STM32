@@ -104,8 +104,9 @@ void lcd_draw_line(point_t *p1, point_t *p2, uint16_t color);  // 画直线
 void lcd_draw_rect(rect_t *rect, uint16_t color);              // 画矩形
 void lcd_draw_circle(point_t *p, uint8_t r, uint16_t color);   // 画圆
 
-void lcd_fill(point_t *p1, point_t *p2, uint16_t color);        // 纯色填充矩阵
-void lcd_color_fill(point_t *p1, point_t *p2, uint16_t *color); // 彩色填充矩阵
+void lcd_fill(point_t *p1, point_t *p2, uint16_t color); // 纯色填充矩阵
+void lcd_color_fill(point_t *p1, point_t *p2,
+                    const uint16_t *color); // 彩色填充矩阵
 void lcd_fill_circle(point_t *p, uint16_t r, uint16_t color);   // 填充圆形
 
 void lcd_clear(uint16_t color);    // 清屏

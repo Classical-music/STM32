@@ -13,7 +13,7 @@
  * 因此 sram 地址范围: 0x68000000 ~ 0x680FFFFF
  */
 #define ESRAM_BASE 0x68000000 // 基地址
-#define ESRAM_SIZE 0x10000    // 1M
+#define ESRAM_SIZE 0x10000    // 64KB
 
 void bsp_sram_init(void);
 

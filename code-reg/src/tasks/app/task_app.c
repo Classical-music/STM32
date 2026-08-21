@@ -5,6 +5,7 @@
 #include "gui/task_gui.h"
 #include "key/task_key.h"
 #include "led/task_led.h"
+#include "touch/task_touch.h"
 #include "task.h"
 #include <stdio.h>
 
@@ -65,6 +66,7 @@ void appTaskInit(void) {
   keyTaskInit();     // 创建 Key 子任务
   taskConsoleInit(); // 创建 console 子任务
   cmdTaskInit();     // 创建 cmd 子任务
+  touchTaskInit();   // 创建 touch 子任务
   taskGuiInit();     // 创建 gui 子任务
 
   xTaskCreate(vAppTask, "appTask", 128, NULL, 2, NULL); // 创建APP任务

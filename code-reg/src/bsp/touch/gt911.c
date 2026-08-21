@@ -60,33 +60,43 @@ static void INT_Init_IR(void) {
 static volatile bool gt911_touched = false;
 static volatile uint16_t gt911_x = 0;
 static volatile uint16_t gt911_y = 0;
+static touch_irq_callback_t gt911_irq_callback = NULL;
 
-void EXTI15_10_IRQHandler() {
+void EXTI15_10_IRQHandler(void) {
   if (EXTI->PR & EXTI_PR_PR10) {
     EXTI->PR = EXTI_PR_PR10; // 清除硬件中断标志
-
-    // 读取 0x814E
-    uint8_t status;
-    gt911_i2c_read(0X814E, &status, 1);
-    if (status & 0x80) { // 有中断
-      uint8_t touch_num = status & 0x0F;
-      if (touch_num > 0 && touch_num <= 5) {
-        // 读取第一个触摸点坐标，假设是0x8150和0x8152
-        uint8_t buf[6];
-        gt911_i2c_read(0x8150, buf, 6); // 读取第一个点，共6字节
-        // 组合坐标 (低字节在前)
-        gt911_x = ((uint16_t)buf[1] << 8) | buf[0];
-        gt911_y = ((uint16_t)buf[3] << 8) | buf[2];
-        gt911_touched = true;
-      } else {
-        gt911_touched = false;
-      }
-
-      // 清除中断标志（写0到0x814E）
-      uint8_t clear = 0;
-      gt911_i2c_write(0x814E, &clear, 1);
-    }
+    if (gt911_irq_callback) // 调用中断回调, 唤醒 Touch Task
+      gt911_irq_callback();
   }
+}
+// 中断回调注册函数
+static void gt911_set_irq_callback(touch_irq_callback_t callback) {
+  gt911_irq_callback = callback;
+}
+// touch 任务处理函数
+static void gt911_process(void) {
+  uint8_t status = 0;
+  // 先读取 0x814E 判断是否有中断
+  gt911_i2c_read(0x814E, &status, 1);
+  if (!(status & 0x80))
+    return; // 没有中断, 直接返回
+
+  uint8_t touch_num = status & 0x0F;
+  if (touch_num > 0 && touch_num <= 5) {
+    // 读取第一个触摸点坐标，0x8150和0x8152
+    uint8_t buf[6];
+    gt911_i2c_read(0x8150, buf, 6);
+    // 组合坐标 (低字节在前)
+    gt911_x = ((uint16_t)buf[1] << 8) | buf[0];
+    gt911_y = ((uint16_t)buf[3] << 8) | buf[2];
+    gt911_touched = true;
+  } else {
+    gt911_touched = false;
+  }
+
+  // 清除中断标志（写0到0x814E）
+  uint8_t clear = 0;
+  gt911_i2c_write(0x814E, &clear, 1);
 }
 
 // 判断是否按下
@@ -243,4 +253,6 @@ touch_t touch = {
     .init = gt911_init,
     .is_pressed = gt911_is_pressed,
     .get_xy = gt911_get_xy,
+    .set_irq_callback = gt911_set_irq_callback,
+    .process = gt911_process,
 };
