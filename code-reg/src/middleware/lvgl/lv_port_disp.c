@@ -185,17 +185,25 @@ void disp_disable_update(void) { disp_flush_enabled = false; }
 /*Flush the content of the internal buffer the specific area on the display
  *You can use DMA or any hardware acceleration to do this operation in the
  * background but 'lv_disp_flush_ready()' has to be called when finished.*/
+static void disp_dma_complete(void *user_arg) {
+  lv_disp_flush_ready((lv_disp_drv_t *)user_arg);
+}
+
 static void disp_flush(lv_disp_drv_t *disp_drv, const lv_area_t *area,
                        lv_color_t *color_p) {
-  if (disp_flush_enabled) {
-    point_t p1 = {(uint16_t)area->x1, (uint16_t)area->y1};
-    point_t p2 = {(uint16_t)area->x2, (uint16_t)area->y2};
-    lcd_color_fill(&p1, &p2, (const uint16_t *)color_p);
+  if (!disp_flush_enabled) {
+    lv_disp_flush_ready(disp_drv);
+    return;
   }
 
-  /*IMPORTANT!!!
-   *Inform the graphics library that you are ready with the flushing*/
-  lv_disp_flush_ready(disp_drv);
+  point_t p1 = {(uint16_t)area->x1, (uint16_t)area->y1};
+  point_t p2 = {(uint16_t)area->x2, (uint16_t)area->y2};
+  dma_result_t result = lcd_color_fill_dma(
+      &p1, &p2, (const uint16_t *)color_p, disp_dma_complete, disp_drv);
+
+  /* 启动失败时没有 DMA 完成中断，需要立即结束本次刷新。 */
+  if (result != DMA_OK)
+    lv_disp_flush_ready(disp_drv);
 }
 
 /*OPTIONAL: GPU INTERFACE*/

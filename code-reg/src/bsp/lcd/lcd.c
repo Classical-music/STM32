@@ -3,6 +3,22 @@
 #include "rcc.h"
 #include "tim/tim.h"
 
+/* LCD 使用 DMA1 Channel1 发送 RGB565 像素数据。 */
+static dma_t lcd_dma = {
+    .config = {
+        .controller = DMA_CONTROLLER_1,
+        .channel = DMA_CHANNEL_1,
+        .direction = DMA_DIR_MEMORY_TO_MEMORY,
+        .source_width = DMA_WIDTH_16BIT,
+        .destination_width = DMA_WIDTH_16BIT,
+        .source_increment = true,
+        .destination_increment = false,
+        .circular = false,
+        .priority = 2,
+        .interrupt_priority = IR_PRI_0,
+    },
+};
+
 /**
  * GPIO 引脚:
  * LCD_CS - FSMC_NE4 - PG12 片选
@@ -19,8 +35,10 @@
  * D4:12 - PE7:15
  * D13:15 - PD8:10
  */
-
+ #include "led/led.h"
 void lcd_init(void) {
+  led_toggle(LED_GREEN);
+
   // RCC LCD_CS, LCD_RS, LCD_RW, LCD_WR, LCD_BL
   RCC_GPIO_EN(RCC_GPIOB | RCC_GPIOD | RCC_GPIOG);
   // RCC PD
@@ -43,9 +61,16 @@ void lcd_init(void) {
   GPIO_SET_MODES(GPIOE, GPIO_MODE_O50 | GPIO_CNF_O_Res_PP, 7, 8, 9, 10, 11, 12,
                  13, 14, 15);
 
+  delay_ms(1000);
+
   fsmc_ne4_init();
 
-  delay_ms(5); // 初始化FSMC后, 必须等待一段时间
+  delay_ms(1000);
+
+  if (dma_init(&lcd_dma) != DMA_OK)
+    return;
+
+  delay_ms(1000); // 初始化FSMC后, 必须等待一段时间
 
   if (!lcddev.init())
     return;
@@ -144,6 +169,45 @@ void lcd_color_fill(point_t *p1, point_t *p2, const uint16_t *color) {
   lcd_write_ram_prepare();
   while (point--)
     LCD->ram = *color++;
+}
+
+/* DMA 出错时复用完成回调，确保上层不会永久等待。 */
+static void lcd_dma_error_callback(void *user_arg) {
+  if (lcd_dma.complete_callback != NULL)
+    lcd_dma.complete_callback(user_arg);
+}
+
+/* 使用 DMA 将连续 RGB565 数据写入 LCD 的固定 RAM 地址。 */
+dma_result_t lcd_color_fill_dma(point_t *p1, point_t *p2,
+                                const uint16_t *color,
+                                dma_complete_callback_t complete,
+                                void *user_arg) {
+  rect_t rect;
+  uint32_t point;
+  dma_result_t result;
+
+  if (p1 == NULL || p2 == NULL || color == NULL ||
+      p1->x > p2->x || p1->y > p2->y || p2->x >= lcddev.width ||
+      p2->y >= lcddev.height)
+    return DMA_ERROR_INVALID_PARAM;
+
+  rect.x = p1->x;
+  rect.y = p1->y;
+  rect.width = p2->x - p1->x + 1;
+  rect.height = p2->y - p1->y + 1;
+  point = (uint32_t)rect.width * rect.height;
+
+  lcd_set_window(&rect);
+  lcd_write_ram_prepare();
+
+  lcd_dma.complete_callback = complete;
+  lcd_dma.error_callback = lcd_dma_error_callback;
+  lcd_dma.user_arg = user_arg;
+  result = dma_start(&lcd_dma, (uint32_t)color, (uint32_t)&LCD->ram,
+                     (uint16_t)point);
+  if (result != DMA_OK)
+    lcd_dma.complete_callback = NULL;
+  return result;
 }
 // 填充圆形
 void lcd_fill_circle(point_t *p, uint16_t r, uint16_t color) {}

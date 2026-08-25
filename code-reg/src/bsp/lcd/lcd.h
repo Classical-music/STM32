@@ -1,6 +1,7 @@
 #ifndef __LCD_H__
 #define __LCD_H__
 
+#include "dma/dma.h"
 #include "gpio.h"
 #include "type.h"
 
@@ -107,6 +108,21 @@ void lcd_draw_circle(point_t *p, uint8_t r, uint16_t color);   // 画圆
 void lcd_fill(point_t *p1, point_t *p2, uint16_t color); // 纯色填充矩阵
 void lcd_color_fill(point_t *p1, point_t *p2,
                     const uint16_t *color); // 彩色填充矩阵
+
+/**
+ * @brief 使用 DMA 异步刷新一个矩形区域。
+ *
+ * @param p1 矩形左上角
+ * @param p2 矩形右下角
+ * @param color RGB565 像素缓冲区
+ * @param complete DMA 传输完成回调
+ * @param user_arg 回调参数
+ * @return DMA_OK 表示 DMA 已启动
+ */
+dma_result_t lcd_color_fill_dma(point_t *p1, point_t *p2,
+                                 const uint16_t *color,
+                                 dma_complete_callback_t complete,
+                                 void *user_arg);
 void lcd_fill_circle(point_t *p, uint16_t r, uint16_t color);   // 填充圆形
 
 void lcd_clear(uint16_t color);    // 清屏
