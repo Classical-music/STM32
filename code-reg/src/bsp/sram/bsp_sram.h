@@ -10,10 +10,10 @@
  * 存储块3起始地址: 0x6000 0000 + (3 - 1) << 26 = 0x68000000
  * 3. 使用 FSMC_A18 ~ A0 连接 SRAM地址, 地址范围: 0x00000 ~ 7FFFF
  * 5. 数据总线宽度为16bit, HADDR[25:1] -> ADDR[24:0]: 地址范围 0x00000 ~ 0xFFFFF
- * 因此 sram 地址范围: 0x68000000 ~ 0x680FFFFF
+ * 因此 sram 地址范围: 0x68000000 ~ 0x680FFFFF 容量为: 0x100000 = 1MB
  */
 #define ESRAM_BASE 0x68000000 // 基地址
-#define ESRAM_SIZE 0x10000    // 64KB
+#define ESRAM_SIZE 0x100000    // 1MB
 
 void bsp_sram_init(void);
 
