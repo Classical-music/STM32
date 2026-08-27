@@ -35,10 +35,7 @@ static dma_t lcd_dma = {
  * D4:12 - PE7:15
  * D13:15 - PD8:10
  */
- #include "led/led.h"
 void lcd_init(void) {
-  led_toggle(LED_GREEN);
-
   // RCC LCD_CS, LCD_RS, LCD_RW, LCD_WR, LCD_BL
   RCC_GPIO_EN(RCC_GPIOB | RCC_GPIOD | RCC_GPIOG);
   // RCC PD
@@ -111,8 +108,21 @@ void lcd_off(void) {
 void lcd_set_dir(lcd_dir_t dir) {
   if (lcddev.dir == dir)
     return;
+
+  switch (dir) {
+  case LCD_DIR_VERT: // 竖屏
+    lcddev.width = 480;
+    lcddev.height = 800;
+    break;
+  case LCD_DIR_HOR: // 横屏
+    lcddev.width = 800;
+    lcddev.height = 480;
+    break;
+
+  default:
+    return;
+  }
   lcddev.dir = dir;
-  SWAP(lcddev.width, lcddev.height);
   lcddev.scan_dir(dir);
 }
 
