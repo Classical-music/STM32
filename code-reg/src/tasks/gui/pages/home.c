@@ -1,106 +1,97 @@
 #include "home.h"
+#include "../common/router.h"
+#include "../components/ui_button.h"
 #include "beep/task_beep.h"
 #include "lvgl.h"
-#include <stdio.h>
 
-// 清除提示的定时器回调
-static void _clear_msg_cb(lv_timer_t *t) {
-  lv_obj_t *lbl = (lv_obj_t *)t->user_data;
-  if (lbl)
-    lv_obj_del(lbl);
-  lv_timer_del(t);
-}
+/*
+ * 首页菜单项配置。
+ * name 用于显示菜单名称，route 用于指定点击后进入的页面路由。
+ * route 为空字符串时，按钮只响应点击，不进行页面跳转。
+ */
+typedef struct {
+  const char *name;
+  const char *route;
+} home_menu_item_t;
 
-// 点击应用按钮时显示提示
-static void app_btn_event_cb(lv_event_t *e) {
-  const char *name = (const char *)lv_event_get_user_data(e);
-  if (!name)
-    name = "App";
+/*
+ * 首页菜单列表。
+ * 新增菜单时只需在此处增加配置，无需修改按钮创建和事件处理逻辑。
+ * 路由名称必须与 views_init() 中注册的路由名称保持一致。
+ */
+static const home_menu_item_t home_menu[] = {
+    {"LED/Beep", "led_beep"},
+    {"Msg", ""},
+    {"Browser", ""},
+    {"Settings", ""},
+    {"Camera", ""},
+    {"Music", ""},
+};
 
-  char buf[64];
-  snprintf(buf, sizeof(buf), "Open: %s", name);
+/*
+ * 所有首页菜单按钮共用的点击事件。
+ * 事件的 user_data 指向对应的 home_menu_item_t 静态菜单项。
+ */
+static void menu_btn_event_cb(lv_event_t *e) {
+  const home_menu_item_t *item =
+      (const home_menu_item_t *)lv_event_get_user_data(e);
 
-  lv_obj_t *msg = lv_label_create(lv_scr_act());
-  lv_label_set_text(msg, buf);
-  lv_obj_align(msg, LV_ALIGN_CENTER, 0, -20);
-  lv_timer_t *t = lv_timer_create(_clear_msg_cb, 1500, msg);
-  (void)t;
+  /* 非空路由使用 push 导航，以便通过底部 Back 按钮返回首页。 */
+  if (item && item->route && item->route[0] != '\0')
+    router_push(item->route, NULL);
 
-  // 播放短促按键音
+  /* 无论是否发生页面跳转，点击按钮时均播放按键反馈音。 */
   playBeep(20);
 }
 
-// 简洁手机主页：状态栏、图标网格、底部 Dock
+/*
+ * 创建首页应用菜单。
+ * 页面 screen 由路由器创建并加载，本函数只负责在当前 screen 上创建控件。
+ * 顶部系统栏和底部 Dock 均为全局组件，不在首页中重复创建。
+ */
 void view_home_init(void *params) {
   lv_obj_t *scr = lv_scr_act();
 
-  /* 本页不再创建本地状态栏，使用全局 system_bar */
+  /* 首页当前不使用路由参数。 */
+  (void)params;
 
-  /* 应用图标网格 */
-  const char *apps[] = {"Phone",    "Msg",    "Browser",
-                        "Settings", "Camera", "Music"};
-  const int app_count = sizeof(apps) / sizeof(apps[0]);
-
-  int scr_w = lv_disp_get_hor_res(NULL);
-  const int cols = 3;
-  const int icon_w = 64;
-  const int icon_h = 64;
-  const int label_h = 18;
+  /*
+   * 手动实现类似 Flex 的横向换行布局：
+   * 根据容器宽度计算一行能容纳的按钮数量，并将剩余空间均匀分配为列间距。
+   * 这样不依赖 LVGL 的 Flex 模块，屏幕宽度变化时仍能自动重新计算布局。
+   */
+  const int menu_count = sizeof(home_menu) / sizeof(home_menu[0]);
+  const int button_w = 64;
+  const int button_h = 82;
   const int margin_x = 12;
-  const int spacing_x = (scr_w - margin_x * 2 - cols * icon_w) / (cols - 1);
+  const int start_y = 12;
+  const int row_gap = 12;
+  const int min_column_gap = 8;
+  const int content_w = lv_obj_get_width(scr) - margin_x * 2;
+  int columns = (content_w + min_column_gap) / (button_w + min_column_gap);
 
-  int start_y = 12; // 顶部留白
+  if (columns < 1)
+    columns = 1;
+  if (columns > menu_count)
+    columns = menu_count;
 
-  for (int i = 0; i < app_count; i++) {
-    int row = i / cols;
-    int col = i % cols;
-    int x = margin_x + col * (icon_w + spacing_x);
-    int y = start_y + row * (icon_h + label_h + 12);
+  const int column_gap = columns > 1
+                             ? (content_w - columns * button_w) / (columns - 1)
+                             : 0;
 
-    lv_obj_t *btn = lv_btn_create(scr);
-    lv_obj_set_size(btn, icon_w, icon_h + label_h);
+  for (int i = 0; i < menu_count; i++) {
+    const home_menu_item_t *item = &home_menu[i];
+    const int row = i / columns;
+    const int column = i % columns;
+    const int x = margin_x + column * (button_w + column_gap);
+    const int y = start_y + row * (button_h + row_gap);
+    lv_obj_t *btn = ui_button_create(scr, item->name);
+
+    lv_obj_set_size(btn, button_w, button_h);
     lv_obj_set_pos(btn, x, y);
     lv_obj_clear_flag(btn, LV_OBJ_FLAG_SCROLLABLE);
 
-    lv_obj_t *icon = lv_label_create(btn);
-    char icon_txt[4] = {0};
-    icon_txt[0] = apps[i][0];
-    lv_label_set_text(icon, icon_txt);
-    lv_obj_align(icon, LV_ALIGN_TOP_MID, 0, 8);
-
-    lv_obj_t *label = lv_label_create(btn);
-    lv_label_set_text(label, apps[i]);
-    lv_obj_align(label, LV_ALIGN_BOTTOM_MID, 0, -6);
-
-    lv_obj_add_event_cb(btn, app_btn_event_cb, LV_EVENT_CLICKED,
-                        (void *)apps[i]);
-  }
-
-  /* 底部 Dock */
-  lv_obj_t *dock = lv_obj_create(scr);
-  lv_obj_set_size(dock, scr_w, 44);
-  lv_obj_align(dock, LV_ALIGN_BOTTOM_MID, 0, 0);
-  lv_obj_clear_flag(dock, LV_OBJ_FLAG_SCROLLABLE);
-
-  const char *dock_apps[] = {"Dial", "Contacts", "Msgs"};
-  const uint32_t dock_colors[] = {0x3DDC84, 0x2196F3, 0xFF9800};
-  for (int i = 0; i < 3; i++) {
-    lv_obj_t *b = lv_btn_create(dock);
-    lv_obj_set_size(b, 56, 56);
-    lv_obj_align(b, LV_ALIGN_LEFT_MID, 12 + i * 80, 0);
-
-    // Android 风格：圆形、彩色背景、白色图标文字
-    lv_obj_set_style_radius(b, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(b, lv_color_hex(dock_colors[i]), 0);
-    lv_obj_set_style_bg_opa(b, LV_OPA_COVER, 0);
-    lv_obj_set_style_border_width(b, 0, 0);
-
-    lv_obj_t *lbl = lv_label_create(b);
-    lv_label_set_text(lbl, dock_apps[i]);
-    lv_obj_center(lbl);
-    lv_obj_set_style_text_color(lbl, lv_color_white(), 0);
-
-    lv_obj_add_event_cb(b, app_btn_event_cb, LV_EVENT_CLICKED,
-                        (void *)dock_apps[i]);
+    /* 将菜单项地址传给公共点击回调，用于读取对应页面路由。 */
+    lv_obj_add_event_cb(btn, menu_btn_event_cb, LV_EVENT_CLICKED, (void *)item);
   }
 }

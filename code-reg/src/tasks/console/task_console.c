@@ -1,6 +1,7 @@
 #include "console/task_console.h"
 #include "beep/task_beep.h"
 #include "task.h"
+#include <stdio.h>
 
 #define LINE_BUFF_SIZE 256
 static char line_buff[LINE_BUFF_SIZE];

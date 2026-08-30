@@ -5,7 +5,6 @@
 #include "key/key.h"
 #include "lcd/lcd.h"
 #include "led/led.h"
-#include "sram/bsp_sram.h"
 #include "touch/bsp_touch.h"
 #include "tpad/tpad.h"
 #include "usart/usart.h"
@@ -26,7 +25,6 @@ void board_init(void) {
   // 初始化存储, 提供资源
   flash_init();    // 初始化 Flash
   eeprom_init();   // 初始化 EEPROM
-  bsp_sram_init(); // 初始化 sram
 
   lcd_init();   // 初始化 LCD
   touch_init(); // 初始化触摸屏

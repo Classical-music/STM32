@@ -27,6 +27,10 @@ int router_push(const char *name, void *params);
 // 返回 0 成功，-1 栈为空
 int router_pop(void);
 
+// 清空全部页面历史并导航到指定页面
+// 适用于 Home 操作，返回 0 成功，-1 未找到
+int router_reset(const char *name, void *params);
+
 // 静态路由表项类型（可放在只读区/Flash）
 typedef struct {
   const char *name;

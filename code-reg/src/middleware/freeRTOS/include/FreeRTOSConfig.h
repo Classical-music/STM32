@@ -11,10 +11,9 @@
 // 栈大小单位 word(4B)
 #define configMINIMAL_STACK_SIZE ((unsigned short)256)
 
-#define configTOTAL_HEAP_SIZE ((size_t)(0x1C000)) // 48K + 1M
-// heap5
+// heap_5 仅管理内部 SRAM 的 48KB 区域，实际起始地址在 main.c 中定义。
+#define configTOTAL_HEAP_SIZE ((size_t)(0xC000))
 #define configUSE_HEAP_5 1
-// #define configTOTAL_HEAP_SIZE ((size_t)(0xF800))
 
 // 任务优先级
 #define configMAX_PRIORITIES (10)

@@ -12,8 +12,16 @@
  * 5. 数据总线宽度为16bit, HADDR[25:1] -> ADDR[24:0]: 地址范围 0x00000 ~ 0xFFFFF
  * 因此 sram 地址范围: 0x68000000 ~ 0x680FFFFF 容量为: 0x100000 = 1MB
  */
-#define ESRAM_BASE 0x68000000 // 基地址
-#define ESRAM_SIZE 0x100000    // 1MB
+#define ESRAM_BASE 0x68000000U  // 外部 SRAM 基地址
+#define ESRAM_SIZE 0x100000U    // 外部 SRAM 总容量：1MB
+
+// 外部 SRAM 前 512KB 作为 LVGL 专用内存池。
+#define ESRAM_LVGL_SIZE 0x80000U
+#define ESRAM_LVGL_BASE ESRAM_BASE
+
+// 外部 SRAM 后 512KB 作为应用数据区，不与 LVGL 内存池重叠。
+#define ESRAM_APP_BASE (ESRAM_BASE + ESRAM_LVGL_SIZE)
+#define ESRAM_APP_SIZE (ESRAM_SIZE - ESRAM_LVGL_SIZE)
 
 void bsp_sram_init(void);
 

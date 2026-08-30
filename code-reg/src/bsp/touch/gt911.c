@@ -3,6 +3,7 @@
 #include "i2c/i2c.h"
 #include "lcd/lcd.h"
 #include "tim/tim.h"
+#include <stdio.h>
 #include <string.h>
 
 static void gt911_i2c_write(uint16_t addr, uint8_t *buff, uint8_t len);

@@ -120,12 +120,12 @@ void lv_port_disp_init(void) {
   //                       MY_DISP_VER_RES *
   //                           LV_VER_RES_MAX); /*Initialize the display
   //                           buffer*/
-  // 使用双缓冲 & heap5
+  // 双缓冲从 LVGL 的外部 SRAM 专用内存池分配。
   static lv_disp_draw_buf_t draw_buf_dsc;
   uint32_t buf_pix_num = MY_DISP_HOR_RES * 10; // 每段 10 行
   uint32_t buf_size = buf_pix_num * sizeof(lv_color_t);
-  lv_color_t *buf1 = (lv_color_t *)LV_MEM_CUSTOM_ALLOC(buf_size);
-  lv_color_t *buf2 = (lv_color_t *)LV_MEM_CUSTOM_ALLOC(buf_size);
+  lv_color_t *buf1 = (lv_color_t *)lv_mem_alloc(buf_size);
+  lv_color_t *buf2 = (lv_color_t *)lv_mem_alloc(buf_size);
   if (buf1 == NULL || buf2 == NULL) {
     while (1)
       ;

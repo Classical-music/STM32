@@ -18,6 +18,7 @@
 #define LV_CONF_H
 
 #include <stdint.h>
+#include "sram/bsp_sram.h"
 
 /*====================
    COLOR SETTINGS
@@ -45,14 +46,14 @@
    MEMORY SETTINGS
  *=========================*/
 
-/*1: use custom malloc/free, 0: use the built-in `lv_mem_alloc()` and `lv_mem_free()`*/
-#define LV_MEM_CUSTOM 1
+/* 使用 LVGL 内置分配器，使 GUI 内存与 FreeRTOS heap 相互隔离。 */
+#define LV_MEM_CUSTOM 0
 #if LV_MEM_CUSTOM == 0
-    /*Size of the memory available for `lv_mem_alloc()` in bytes (>= 2kB)*/
-    #define LV_MEM_SIZE (48U * 1024U)          /*[bytes]*/
+    /* 外部 SRAM 的 LVGL 分区用于控件、样式及渲染临时数据。 */
+    #define LV_MEM_SIZE ESRAM_LVGL_SIZE          /*[bytes]*/
 
-    /*Set an address for the memory pool instead of allocating it as a normal array. Can be in external SRAM too.*/
-    #define LV_MEM_ADR 0     /*0: unused*/
+    /* 使用前必须完成 FSMC 初始化。 */
+    #define LV_MEM_ADR ESRAM_LVGL_BASE           /*0: unused*/
     /*Instead of an address give a memory allocator that will be called to get a memory pool for LVGL. E.g. my_malloc*/
     #if LV_MEM_ADR == 0
         #undef LV_MEM_POOL_INCLUDE
