@@ -29,7 +29,7 @@
 static void touchpad_init(void);
 static void touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
 static bool touchpad_is_pressed(void);
-static void touchpad_get_xy(lv_coord_t *x, lv_coord_t *y);
+static void touchpad_get_xy(int32_t *x, int32_t *y);
 
 // static void mouse_init(void);
 // static void mouse_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data);
@@ -191,7 +191,12 @@ static void touchpad_read(lv_indev_drv_t *indev_drv, lv_indev_data_t *data) {
 
   /*Save the pressed coordinates and the state*/
   if (touchpad_is_pressed()) {
-    touchpad_get_xy(&last_x, &last_y);
+    int32_t x;
+    int32_t y;
+
+    touchpad_get_xy(&x, &y);
+    last_x = (lv_coord_t)x;
+    last_y = (lv_coord_t)y;
     data->state = LV_INDEV_STATE_PR;
   } else {
     data->state = LV_INDEV_STATE_REL;
@@ -209,12 +214,12 @@ static bool touchpad_is_pressed(void) {
 }
 
 /*Get the x and y coordinates if the touchpad is pressed*/
-static void touchpad_get_xy(lv_coord_t *x, lv_coord_t *y) {
+static void touchpad_get_xy(int32_t *x, int32_t *y) {
   /*Your code comes here*/
 
   // (*x) = 0;
   // (*y) = 0;
-  touch_get_xy((int32_t *)x, (int32_t *)y);
+  touch_get_xy(x, y);
 }
 
 /*------------------
