@@ -336,7 +336,7 @@
               <MiscControls>--gnu --diag_suppress=68,111,188,546</MiscControls>
               <Define>LV_CONF_INCLUDE_SIMPLE</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\startup;.\src\drivers;.\src\bsp;.\src\middleware;.\src\middleware\utils;.\src\user;.\src\user\led;.\src\middleware\freeRTOS;.\src\middleware\freeRTOS\include;.\src\middleware\freeRTOS\portable\RVDS\ARM_CM3;.\src\tasks;.\src\middleware\lvgl;.\src\middleware\lvgl\src;.\src\middleware\lvgl\port\stm32;.\src\middleware\lvgl\examples\porting</IncludePath>
+              <IncludePath>.\src\startup;.\src\drivers;.\src\bsp;.\src\middleware;.\src\middleware\utils;.\src\user;.\src\user\led;.\src\middleware\freeRTOS;.\src\middleware\freeRTOS\include;.\src\middleware\freeRTOS\portable\RVDS\ARM_CM3;.\src\tasks;.\src\ui;.\src\middleware\lvgl;.\src\middleware\lvgl\src;.\src\middleware\lvgl\port\stm32;.\src\middleware\lvgl\examples\porting</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -681,37 +681,37 @@
             <File>
               <FileName>views.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\tasks\gui\views\views.c</FilePath>
+              <FilePath>.\src\ui\views\views.c</FilePath>
             </File>
             <File>
               <FileName>router.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\tasks\gui\common\router.c</FilePath>
+              <FilePath>.\src\ui\common\router.c</FilePath>
             </File>
             <File>
               <FileName>home.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\tasks\gui\pages\home.c</FilePath>
+              <FilePath>.\src\ui\pages\home.c</FilePath>
             </File>
             <File>
               <FileName>ui_button.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\tasks\gui\components\ui_button.c</FilePath>
+              <FilePath>.\src\ui\components\ui_button.c</FilePath>
             </File>
             <File>
               <FileName>led_beep.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\tasks\gui\pages\led_beep.c</FilePath>
+              <FilePath>.\src\ui\pages\led_beep.c</FilePath>
             </File>
             <File>
               <FileName>system_bar.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\tasks\gui\common\system_bar.c</FilePath>
+              <FilePath>.\src\ui\common\system_bar.c</FilePath>
             </File>
             <File>
               <FileName>dock.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\tasks\gui\common\dock.c</FilePath>
+              <FilePath>.\src\ui\common\dock.c</FilePath>
             </File>
           </Files>
         </Group>
