@@ -334,9 +334,9 @@
             <v6Rtti>0</v6Rtti>
             <VariousControls>
               <MiscControls>--gnu --diag_suppress=68,111,188,546</MiscControls>
-              <Define></Define>
+              <Define>LV_CONF_INCLUDE_SIMPLE</Define>
               <Undefine></Undefine>
-              <IncludePath>.\src\startup;.\src\drivers;.\src\bsp;.\src\middleware;.\src\middleware\utils;.\src\user;.\src\user\led;.\src\middleware\freeRTOS;.\src\middleware\freeRTOS\include;.\src\middleware\freeRTOS\portable\RVDS\ARM_CM3;.\src\tasks;.\src\middleware\lvgl;.\src\middleware\lvgl\src;.\src\middleware\lvgl\examples\porting</IncludePath>
+              <IncludePath>.\src\startup;.\src\drivers;.\src\bsp;.\src\middleware;.\src\middleware\utils;.\src\user;.\src\user\led;.\src\middleware\freeRTOS;.\src\middleware\freeRTOS\include;.\src\middleware\freeRTOS\portable\RVDS\ARM_CM3;.\src\tasks;.\src\middleware\lvgl;.\src\middleware\lvgl\src;.\src\middleware\lvgl\port\stm32;.\src\middleware\lvgl\examples\porting</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>
@@ -1276,7 +1276,7 @@
             <File>
               <FileName>lv_port_disp.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\middleware\lvgl\lv_port_disp.c</FilePath>
+              <FilePath>.\src\middleware\lvgl\port\stm32\lv_port_disp.c</FilePath>
             </File>
             <File>
               <FileName>lv_port_fs_template.c</FileName>
@@ -1286,7 +1286,7 @@
             <File>
               <FileName>lv_port_indev.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\middleware\lvgl\lv_port_indev.c</FilePath>
+              <FilePath>.\src\middleware\lvgl\port\stm32\lv_port_indev.c</FilePath>
             </File>
             <File>
               <FileName>lv_extra.c</FileName>
