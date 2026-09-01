@@ -1294,6 +1294,11 @@
               <FilePath>.\src\middleware\lvgl\src\extra\lv_extra.c</FilePath>
             </File>
             <File>
+              <FileName>lv_flex.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\middleware\lvgl\src\extra\layouts\flex\lv_flex.c</FilePath>
+            </File>
+            <File>
               <FileName>lv_theme_default.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\middleware\lvgl\src\extra\themes\default\lv_theme_default.c</FilePath>

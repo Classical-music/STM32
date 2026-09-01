@@ -56,42 +56,33 @@ void view_home_init(void *params) {
   (void)params;
 
   /*
-   * 手动实现类似 Flex 的横向换行布局：
-   * 根据容器宽度计算一行能容纳的按钮数量，并将剩余空间均匀分配为列间距。
-   * 这样不依赖 LVGL 的 Flex 模块，屏幕宽度变化时仍能自动重新计算布局。
+   * 使用 LVGL Flex 布局管理首页按钮：
+   * - 按行排列按钮，空间不足时自动换行；
+   * - 子控件按照创建顺序从左到右、从上到下排列；
+   * - 所有按钮从容器左上角开始布局。
    */
+  lv_obj_set_layout(scr, LV_LAYOUT_FLEX);
+  lv_obj_set_flex_flow(scr, LV_FLEX_FLOW_ROW_WRAP);
+  lv_obj_set_flex_align(scr, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START,
+                        LV_FLEX_ALIGN_START);
+
+  /* 设置 Flex 容器的内边距和按钮之间的间距。 */
+  lv_obj_set_style_pad_left(scr, 12, 0);
+  lv_obj_set_style_pad_right(scr, 12, 0);
+  lv_obj_set_style_pad_top(scr, 12, 0);
+  lv_obj_set_style_pad_row(scr, 12, 0);
+  lv_obj_set_style_pad_column(scr, 8, 0);
+
   const int menu_count = sizeof(home_menu) / sizeof(home_menu[0]);
   const int button_w = 64;
   const int button_h = 82;
-  const int margin_x = 12;
-  const int start_y = 12;
-  const int row_gap = 12;
-  const int min_column_gap = 8;
-  const int content_w = lv_obj_get_width(scr) - margin_x * 2;
-  int columns = (content_w + min_column_gap) / (button_w + min_column_gap);
-
-  if (columns < 1)
-    columns = 1;
-  if (columns > menu_count)
-    columns = menu_count;
-
-  const int column_gap = columns > 1
-                             ? (content_w - columns * button_w) / (columns - 1)
-                             : 0;
 
   for (int i = 0; i < menu_count; i++) {
     const home_menu_item_t *item = &home_menu[i];
-    const int row = i / columns;
-    const int column = i % columns;
-    const int x = margin_x + column * (button_w + column_gap);
-    const int y = start_y + row * (button_h + row_gap);
     lv_obj_t *btn = ui_button_create(scr, item->name);
 
     lv_obj_set_size(btn, button_w, button_h);
-    lv_obj_set_pos(btn, x, y);
     lv_obj_clear_flag(btn, LV_OBJ_FLAG_SCROLLABLE);
-
-    /* 将菜单项地址传给公共点击回调，用于读取对应页面路由。 */
     lv_obj_add_event_cb(btn, menu_btn_event_cb, LV_EVENT_CLICKED, (void *)item);
   }
 }
