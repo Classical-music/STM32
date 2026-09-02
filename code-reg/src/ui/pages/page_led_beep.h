@@ -1,5 +1,5 @@
-#ifndef __LED_BEEP_H__
-#define __LED_BEEP_H__
+#ifndef __PAGE_LED_BEEP_H__
+#define __PAGE_LED_BEEP_H__
 
 #include "lvgl.h"
 

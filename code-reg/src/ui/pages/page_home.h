@@ -1,5 +1,5 @@
-#ifndef __HOME_H__
-#define __HOME_H__
+#ifndef __PAGE_HOME_H__
+#define __PAGE_HOME_H__
 
 #include "lvgl.h"
 

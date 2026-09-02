@@ -2,8 +2,8 @@
 #include "../common/router.h"
 #include "../common/system_bar.h"
 #include "../common/dock.h"
-#include "../pages/home.h"
-#include "../pages/led_beep.h"
+#include "../pages/page_home.h"
+#include "../pages/page_led_beep.h"
 
 void views_init(void) {
   static int initialized;

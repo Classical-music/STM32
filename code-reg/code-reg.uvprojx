@@ -689,9 +689,9 @@
               <FilePath>.\src\ui\common\router.c</FilePath>
             </File>
             <File>
-              <FileName>home.c</FileName>
+              <FileName>page_home.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\ui\pages\home.c</FilePath>
+              <FilePath>.\src\ui\pages\page_home.c</FilePath>
             </File>
             <File>
               <FileName>ui_button.c</FileName>
@@ -699,9 +699,19 @@
               <FilePath>.\src\ui\components\ui_button.c</FilePath>
             </File>
             <File>
-              <FileName>led_beep.c</FileName>
+              <FileName>ui_spinbox.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\ui\pages\led_beep.c</FilePath>
+              <FilePath>.\src\ui\components\ui_spinbox.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_virtual_keyboard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\common\ui_virtual_keyboard.c</FilePath>
+            </File>
+            <File>
+              <FileName>page_led_beep.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\pages\page_led_beep.c</FilePath>
             </File>
             <File>
               <FileName>system_bar.c</FileName>
@@ -997,6 +1007,11 @@
               <FileName>lv_textarea.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\middleware\lvgl\src\widgets\lv_textarea.c</FilePath>
+            </File>
+            <File>
+              <FileName>lv_keyboard.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\middleware\lvgl\src\extra\widgets\keyboard\lv_keyboard.c</FilePath>
             </File>
             <File>
               <FileName>lv_font.c</FileName>
@@ -1297,6 +1312,11 @@
               <FileName>lv_flex.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\middleware\lvgl\src\extra\layouts\flex\lv_flex.c</FilePath>
+            </File>
+            <File>
+              <FileName>lv_spinbox.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\middleware\lvgl\src\extra\widgets\spinbox\lv_spinbox.c</FilePath>
             </File>
             <File>
               <FileName>lv_theme_default.c</FileName>
