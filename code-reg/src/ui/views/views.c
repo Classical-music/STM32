@@ -2,6 +2,7 @@
 #include "../common/router.h"
 #include "../common/system_bar.h"
 #include "../common/dock.h"
+#include "../common/ui_virtual_keyboard.h"
 #include "../pages/page_home.h"
 #include "../pages/page_led_beep.h"
 
@@ -25,4 +26,7 @@ void views_init(void) {
 
   // 导航到首页
   router_navigate("home", NULL);
+
+  // 首页创建完成后，异步预创建全局虚拟键盘。
+  ui_virtual_keyboard_init_async();
 }

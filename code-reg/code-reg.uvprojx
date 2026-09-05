@@ -704,9 +704,24 @@
               <FilePath>.\src\ui\components\ui_spinbox.c</FilePath>
             </File>
             <File>
+              <FileName>ui_slider.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\components\ui_slider.c</FilePath>
+            </File>
+            <File>
               <FileName>ui_virtual_keyboard.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ui\common\ui_virtual_keyboard.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_page_base.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\components\ui_page_base.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_form.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\components\ui_form.c</FilePath>
             </File>
             <File>
               <FileName>page_led_beep.c</FileName>

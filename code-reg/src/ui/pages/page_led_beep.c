@@ -1,10 +1,42 @@
 #include "page_led_beep.h"
 #include "beep/task_beep.h"
 #include "components/ui_spinbox.h"
+#include "components/ui_slider.h"
+#include "components/ui_page_base.h"
+#include "components/ui_form.h"
 #include "lvgl.h"
+#include "task.h"
+#include <stdio.h>
 
-#define LED_BEEP_CONTENT_WIDTH 360
-#define LED_BEEP_CONTROL_WIDTH 300
+#define LED_BEEP_BUTTON_GAP 12
+
+/* 输出页面初始化阶段的采样结果；调用前所有时间点已经完成采样。 */
+static void led_beep_print_timing(TickType_t start_tick,
+                                  TickType_t page_base_tick,
+                                  TickType_t title_tick,
+                                  TickType_t loop_mode_tick,
+                                  TickType_t frequency_tick,
+                                  TickType_t play_time_tick,
+                                  TickType_t stop_time_tick,
+                                  TickType_t duration_tick,
+                                  TickType_t hide_rows_tick,
+                                  TickType_t buttons_tick,
+                                  TickType_t end_tick) {
+  printf("[led_beep] page_base=%lu title=%lu loop_mode=%lu "
+         "frequency=%lu play_time=%lu stop_time=%lu duration=%lu "
+         "hide_rows=%lu buttons=%lu finalize=%lu total=%lu ms\r\n",
+         (unsigned long)((page_base_tick - start_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((title_tick - page_base_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((loop_mode_tick - title_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((frequency_tick - loop_mode_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((play_time_tick - frequency_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((stop_time_tick - play_time_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((duration_tick - stop_time_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((hide_rows_tick - duration_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((buttons_tick - hide_rows_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((end_tick - buttons_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((end_tick - start_tick) * portTICK_PERIOD_MS));
+}
 
 /* 页面中每组参数控件的统一对象引用。
  * row         : 当前参数所在的容器，用于整体显示或隐藏。
@@ -18,6 +50,8 @@ typedef struct {
   lv_obj_t *spinbox;
   lv_obj_t *value_label;
   ui_spinbox_t spinbox_component;
+  ui_slider_t slider_component;
+  ui_form_row_t form_row;
   bool use_spinbox;
   const char *unit;
 } led_beep_value_control_t;
@@ -33,7 +67,7 @@ static led_beep_value_control_t g_single_time;
 static void led_beep_update_value_label(
     led_beep_value_control_t *control) {
   int32_t value = control->spinbox != NULL
-                      ? lv_spinbox_get_value(control->spinbox)
+                      ? ui_spinbox_get_value(&control->spinbox_component)
                       : lv_slider_get_value(control->slider);
 
   lv_label_set_text_fmt(control->value_label, "%ld %s", (long)value,
@@ -44,7 +78,7 @@ static void led_beep_update_value_label(
 static int32_t led_beep_get_control_value(
     const led_beep_value_control_t *control) {
   return control->spinbox != NULL
-             ? lv_spinbox_get_value(control->spinbox)
+             ? ui_spinbox_get_value(&control->spinbox_component)
              : lv_slider_get_value(control->slider);
 }
 
@@ -78,7 +112,8 @@ static void led_beep_value_event_cb(lv_event_t *event) {
   led_beep_value_control_t *control =
       (led_beep_value_control_t *)lv_event_get_user_data(event);
 
-  led_beep_update_value_label(control);
+  if (control->value_label != NULL)
+    led_beep_update_value_label(control);
   if (control == &g_frequency)
     led_beep_sync_period_controls();
 }
@@ -139,10 +174,10 @@ static void led_beep_stop_event_cb(lv_event_t *event) {
 }
 
 /* 创建一个参数控制行。
- * 每行包含参数名称、当前数值标签和底部滑块。
- * control 保存控件引用，供滑块事件回调读取当前值并更新标签。
+ * 每行包含参数名称和数值调节控件；滑块控件还显示当前数值标签。
+ * control 保存控件引用，供数值变化事件读取当前值并更新标签。
  */
-static void led_beep_create_value_control(lv_obj_t *parent,
+static void led_beep_create_value_control(ui_form_t *form,
                                            led_beep_value_control_t *control,
                                            const char *name,
                                            const char *unit,
@@ -150,54 +185,37 @@ static void led_beep_create_value_control(lv_obj_t *parent,
                                            int32_t max,
                                            int32_t current,
                                            bool use_spinbox) {
-  lv_obj_t *name_label;
+  lv_obj_t *control_parent;
 
-  control->row = lv_obj_create(parent);
   control->slider = NULL;
   control->spinbox = NULL;
-  control->value_label = lv_label_create(control->row);
+  control->value_label = NULL;
   control->unit = unit;
   control->use_spinbox = use_spinbox;
-  name_label = lv_label_create(control->row);
-
-  /* 参数行高度根据控件类型调整，避免较高的数字输入框覆盖参数名称。 */
-  lv_obj_set_width(control->row, LED_BEEP_CONTENT_WIDTH);
-  lv_obj_set_height(control->row, use_spinbox ? 82 : 58);
-  lv_obj_clear_flag(control->row, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_pad_all(control->row, 6, 0);
-  lv_obj_set_style_border_width(control->row, 0, 0);
-  lv_obj_set_style_bg_opa(control->row, LV_OPA_TRANSP, 0);
-
-  /* 参数名称放在行的左上角。 */
-  lv_label_set_text(name_label, name);
-  lv_obj_align(name_label, LV_ALIGN_TOP_LEFT, 0, 0);
+  ui_form_row_create(form, &control->form_row, name);
+  control->row = control->form_row.container;
+  control_parent = control->form_row.container;
 
   if (use_spinbox) {
-    ui_spinbox_create(&control->spinbox_component, control->row, min, max,
+    ui_spinbox_create(&control->spinbox_component, control_parent, min, max,
                       current, 1, 3);
     control->spinbox = control->spinbox_component.spinbox;
+    ui_form_row_set_control(&control->form_row,
+                            control->spinbox_component.container);
     ui_spinbox_add_event_cb(&control->spinbox_component,
                             led_beep_value_event_cb,
                             LV_EVENT_VALUE_CHANGED, control);
-    lv_obj_add_flag(control->value_label, LV_OBJ_FLAG_HIDDEN);
   } else {
-    /* 播放时长和停止时长继续使用滑块调节。 */
-    control->slider = lv_slider_create(control->row);
-    lv_slider_set_range(control->slider, min, max);
-    lv_slider_set_value(control->slider, current, LV_ANIM_OFF);
-    lv_obj_set_width(control->slider, LED_BEEP_CONTROL_WIDTH);
-    lv_obj_align(control->slider, LV_ALIGN_BOTTOM_LEFT, 0, 0);
-    lv_obj_add_event_cb(control->slider, led_beep_slider_event_cb,
-                        LV_EVENT_VALUE_CHANGED, control);
+    ui_slider_create(&control->slider_component, control_parent, min, max,
+                     current, unit);
+    control->slider = control->slider_component.slider;
+    ui_form_row_set_control(&control->form_row,
+                            control->slider_component.container);
+    control->value_label = control->slider_component.value_label;
+    ui_slider_add_event_cb(&control->slider_component,
+                           led_beep_slider_event_cb,
+                           LV_EVENT_VALUE_CHANGED, control);
   }
-
-  /* 数值标签放在行的右上角，并显示当前值及单位。 */
-  if (!use_spinbox)
-    lv_label_set_text_fmt(control->value_label, "%ld %s", (long)current,
-                          unit);
-  lv_obj_align(control->value_label, LV_ALIGN_TOP_RIGHT, 0, 0);
-
-  /* 频率输入框和滑块都已经注册数值变化回调。 */
 }
 
 /* 初始化蜂鸣器控制页面。
@@ -205,83 +223,78 @@ static void led_beep_create_value_control(lv_obj_t *parent,
  * 模块负责，页面通过 playBeep() 或 playBeepLoop() 启动播放。
  */
 void view_led_beep_init(void *params) {
+  TickType_t start_tick = xTaskGetTickCount();
+  TickType_t page_base_tick;
+  TickType_t title_tick;
+  TickType_t loop_mode_tick;
+  TickType_t frequency_tick;
+  TickType_t play_time_tick;
+  TickType_t stop_time_tick;
+  TickType_t duration_tick;
+  TickType_t hide_rows_tick;
+  TickType_t buttons_tick;
+  TickType_t end_tick;
   lv_obj_t *scr = lv_scr_act();
-  lv_obj_t *content;
   lv_obj_t *title;
   lv_obj_t *play_button;
   lv_obj_t *stop_button;
+  ui_form_t form;
+  ui_form_row_t loop_mode_form_row;
   lv_obj_t *button_row;
-  lv_obj_t *loop_mode_row;
-  lv_obj_t *loop_mode_label;
   lv_obj_t *play_label;
   lv_obj_t *stop_label;
 
   (void)params;
 
-  /* 页面使用单列 Flex 布局，控件按照创建顺序从上到下排列。 */
-  lv_obj_set_layout(scr, LV_LAYOUT_FLEX);
-  lv_obj_set_flex_flow(scr, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_flex_align(scr, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
-                        LV_FLEX_ALIGN_START);
-  lv_obj_set_style_pad_top(scr, 24, 0);
-  lv_obj_set_style_pad_row(scr, 12, 0);
+  /* 页面基础布局统一处理尺寸、系统栏和 Dock 避让、边距及 Flex 间距。 */
+  ui_page_base_init(scr);
+  page_base_tick = xTaskGetTickCount();
 
   /* 页面标题。 */
   title = lv_label_create(scr);
   lv_label_set_text(title, "Buzzer Control");
+  title_tick = xTaskGetTickCount();
 
-  /* 参数内容面板使用垂直 Flex 布局，参数行会自动从上到下排列。 */
-  content = lv_obj_create(scr);
-  lv_obj_set_width(content, LED_BEEP_CONTENT_WIDTH);
-  lv_obj_set_height(content, LV_SIZE_CONTENT);
-  lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_pad_all(content, 12, 0);
-  lv_obj_set_style_pad_row(content, 12, 0);
-  lv_obj_set_layout(content, LV_LAYOUT_FLEX);
-  lv_obj_set_flex_flow(content, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_flex_align(content, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_CENTER,
-                        LV_FLEX_ALIGN_START);
-
-  /* 循环模式开关。默认关闭，因此页面初始为单次播放模式。 */
-  loop_mode_row = lv_obj_create(content);
-  lv_obj_set_width(loop_mode_row, LED_BEEP_CONTENT_WIDTH);
-  lv_obj_set_height(loop_mode_row, 40);
-  lv_obj_clear_flag(loop_mode_row, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_pad_all(loop_mode_row, 0, 0);
-  lv_obj_set_style_border_width(loop_mode_row, 0, 0);
-  lv_obj_set_style_bg_opa(loop_mode_row, LV_OPA_TRANSP, 0);
-  loop_mode_label = lv_label_create(loop_mode_row);
-  lv_label_set_text(loop_mode_label, "Loop mode");
-  lv_obj_align(loop_mode_label, LV_ALIGN_LEFT_MID, 0, 0);
-  g_loop_checkbox = lv_switch_create(loop_mode_row);
-  lv_obj_align(g_loop_checkbox, LV_ALIGN_RIGHT_MID, 0, 0);
+  /* Form 统一管理页面中的参数行和控件布局。 */
+  ui_form_create(&form, scr);
+  ui_form_row_create(&form, &loop_mode_form_row, "Loop mode");
+  g_loop_checkbox = lv_switch_create(loop_mode_form_row.container);
+  ui_form_row_set_control(&loop_mode_form_row, g_loop_checkbox);
   lv_obj_add_event_cb(g_loop_checkbox, led_beep_loop_mode_event_cb,
                       LV_EVENT_VALUE_CHANGED, NULL);
+  loop_mode_tick = xTaskGetTickCount();
 
   /* 创建循环模式参数：频率、播放时长和停止时长。 */
-  led_beep_create_value_control(content, &g_frequency, "Frequency", "Hz", 1,
+  led_beep_create_value_control(&form, &g_frequency, "Frequency", "Hz", 1,
                                 100, 10, true);
-  led_beep_create_value_control(content, &g_play_time, "Play time", "ms", 10,
+  frequency_tick = xTaskGetTickCount();
+  led_beep_create_value_control(&form, &g_play_time, "Play time", "ms", 10,
                                 5000, 100, false);
-  led_beep_create_value_control(content, &g_stop_time, "Stop time", "ms", 10,
+  play_time_tick = xTaskGetTickCount();
+  led_beep_create_value_control(&form, &g_stop_time, "Stop time", "ms", 10,
                                 5000, 100, false);
+  stop_time_tick = xTaskGetTickCount();
 
   /* 创建非循环模式参数：一次播放的总持续时间。 */
-  led_beep_create_value_control(content, &g_single_time, "Duration", "ms", 10,
+  led_beep_create_value_control(&form, &g_single_time, "Duration", "ms", 10,
                                 10000, 1000, false);
+  duration_tick = xTaskGetTickCount();
 
   /* 默认隐藏循环模式参数，只显示单次播放的持续时间。 */
   lv_obj_add_flag(g_frequency.row, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(g_play_time.row, LV_OBJ_FLAG_HIDDEN);
   lv_obj_add_flag(g_stop_time.row, LV_OBJ_FLAG_HIDDEN);
+  hide_rows_tick = xTaskGetTickCount();
 
-  /* 创建播放和停止按钮所在的横向容器。 */
-  button_row = lv_obj_create(content);
-  lv_obj_set_size(button_row, LED_BEEP_CONTENT_WIDTH, 60);
+  /* 创建播放和停止按钮所在的横向操作区。 */
+  button_row = lv_obj_create(scr);
+  lv_obj_set_width(button_row, LV_PCT(100));
+  lv_obj_set_height(button_row, 60);
   lv_obj_clear_flag(button_row, LV_OBJ_FLAG_SCROLLABLE);
   lv_obj_set_style_pad_all(button_row, 0, 0);
   lv_obj_set_style_border_width(button_row, 0, 0);
   lv_obj_set_style_bg_opa(button_row, LV_OPA_TRANSP, 0);
+  lv_obj_set_style_pad_column(button_row, LED_BEEP_BUTTON_GAP, 0);
   lv_obj_set_layout(button_row, LV_LAYOUT_FLEX);
   lv_obj_set_flex_flow(button_row, LV_FLEX_FLOW_ROW);
   lv_obj_set_flex_align(button_row, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER,
@@ -304,4 +317,11 @@ void view_led_beep_init(void *params) {
   lv_obj_center(stop_label);
   lv_obj_add_event_cb(stop_button, led_beep_stop_event_cb, LV_EVENT_CLICKED,
                       NULL);
+  buttons_tick = xTaskGetTickCount();
+  end_tick = xTaskGetTickCount();
+
+  led_beep_print_timing(start_tick, page_base_tick, title_tick,
+                        loop_mode_tick, frequency_tick, play_time_tick,
+                        stop_time_tick, duration_tick, hide_rows_tick,
+                        buttons_tick, end_tick);
 }
