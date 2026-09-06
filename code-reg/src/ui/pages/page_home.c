@@ -16,6 +16,7 @@ typedef struct {
 
 static const home_menu_item_t home_menu_items[] = {
     {"LED / Beep", "led_beep"},
+    {"LVGL Perf", "lvgl_perf"},
 };
 
 /* 菜单按钮点击回调。 */

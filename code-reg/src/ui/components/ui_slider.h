@@ -8,6 +8,7 @@ typedef struct {
   lv_obj_t *slider;
   lv_obj_t *value_label;
   const char *unit;
+  char value_text[24];
 } ui_slider_t;
 
 void ui_slider_create(ui_slider_t *component, lv_obj_t *parent,

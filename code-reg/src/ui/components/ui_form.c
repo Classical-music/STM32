@@ -1,4 +1,5 @@
 #include "ui_form.h"
+#include "ui_common_styles.h"
 #include "task.h"
 #include <stdio.h>
 
@@ -25,8 +26,7 @@ static void ui_form_print_timing(const char *type,
 #define UI_FORM_LABEL_CONTROL_GAP 32
 #define UI_FORM_CONTROL_POS (UI_FORM_LABEL_WIDTH + UI_FORM_LABEL_CONTROL_GAP)
 
-/* Form 中相邻两行之间的垂直间距。 */
-#define UI_FORM_ROW_GAP 12
+/* Form 中相邻两行之间的垂直间距由公共样式模块统一管理。 */
 
 /* 创建 Form 根容器，并配置为纵向 Flex 布局。 */
 void ui_form_create(ui_form_t *form, lv_obj_t *parent) {
@@ -37,7 +37,10 @@ void ui_form_create(ui_form_t *form, lv_obj_t *parent) {
   TickType_t end_tick;
 
   /* Form 本身只负责排列多个 form row，不直接承载输入控件。 */
+  ui_common_styles_init();
   form->container = lv_obj_create(parent);
+  lv_obj_add_style(form->container, ui_style_form_container(), 0);
+  lv_obj_clear_flag(form->container, LV_OBJ_FLAG_SCROLLABLE);
   container_tick = xTaskGetTickCount();
   lv_obj_set_width(form->container, LV_PCT(100));
   lv_obj_set_height(form->container, LV_SIZE_CONTENT);
@@ -48,14 +51,9 @@ void ui_form_create(ui_form_t *form, lv_obj_t *parent) {
   lv_obj_set_flex_flow(form->container, LV_FLEX_FLOW_COLUMN);
   lv_obj_set_flex_align(form->container, LV_FLEX_ALIGN_START,
                         LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START);
-  lv_obj_set_style_pad_all(form->container, 0, 0);
-  lv_obj_set_style_pad_row(form->container, UI_FORM_ROW_GAP, 0);
   label_tick = xTaskGetTickCount();
 
   /* Form 是透明布局容器，不显示边框、背景，也不需要滚动。 */
-  lv_obj_set_style_border_width(form->container, 0, 0);
-  lv_obj_set_style_bg_opa(form->container, LV_OPA_TRANSP, 0);
-  lv_obj_clear_flag(form->container, LV_OBJ_FLAG_SCROLLABLE);
   end_tick = xTaskGetTickCount();
 
   ui_form_print_timing("form", start_tick, container_tick, layout_tick,
@@ -73,24 +71,18 @@ void ui_form_row_create(ui_form_t *form, ui_form_row_t *row,
 
   /* 创建当前行，不使用布局；控件位置由 ui_form_row_set_control() 指定。 */
   row->container = lv_obj_create(form->container);
+  lv_obj_add_style(row->container, ui_style_form_row(), 0);
+  lv_obj_clear_flag(row->container, LV_OBJ_FLAG_SCROLLABLE);
   container_tick = xTaskGetTickCount();
   lv_obj_set_width(row->container, LV_PCT(100));
   lv_obj_set_height(row->container, LV_SIZE_CONTENT);
-  lv_obj_set_style_pad_all(row->container, 0, 0);
   layout_tick = xTaskGetTickCount();
 
-  /* 行本身不显示背景和边框，也不滚动；允许子控件超出边界显示。 */
-  lv_obj_set_style_border_width(row->container, 0, 0);
-  lv_obj_set_style_bg_opa(row->container, LV_OPA_TRANSP, 0);
-  lv_obj_clear_flag(row->container, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_add_flag(row->container, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
-
-  /* 创建左侧 label；先完成显示约束，再写入文本，避免文本设置后重复计算布局。 */
+  /* label 默认就是 WRAP，只设置 Form 实际需要变化的属性。 */
   row->label = lv_label_create(row->container);
   lv_obj_set_width(row->label, UI_FORM_LABEL_WIDTH);
-  lv_label_set_long_mode(row->label, LV_LABEL_LONG_WRAP);
-  lv_obj_set_style_text_align(row->label, LV_TEXT_ALIGN_RIGHT, 0);
-  lv_label_set_text(row->label, label_text);
+  /* label 文本来自页面常量字符串，不需要复制到 LVGL 堆内存。 */
+  lv_label_set_text_static(row->label, label_text);
   label_tick = xTaskGetTickCount();
 
   end_tick = xTaskGetTickCount();

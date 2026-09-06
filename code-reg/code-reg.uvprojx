@@ -699,9 +699,14 @@
               <FilePath>.\src\ui\components\ui_button.c</FilePath>
             </File>
             <File>
-              <FileName>ui_spinbox.c</FileName>
+              <FileName>ui_common_styles.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\ui\components\ui_spinbox.c</FilePath>
+              <FilePath>.\src\ui\components\ui_common_styles.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_spinebox.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\components\ui_spinebox.c</FilePath>
             </File>
             <File>
               <FileName>ui_slider.c</FileName>
@@ -727,6 +732,11 @@
               <FileName>page_led_beep.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ui\pages\page_led_beep.c</FilePath>
+            </File>
+            <File>
+              <FileName>page_lvgl_perf.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\pages\page_lvgl_perf.c</FilePath>
             </File>
             <File>
               <FileName>system_bar.c</FileName>

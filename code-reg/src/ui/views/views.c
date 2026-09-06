@@ -5,6 +5,7 @@
 #include "../common/ui_virtual_keyboard.h"
 #include "../pages/page_home.h"
 #include "../pages/page_led_beep.h"
+#include "../pages/page_lvgl_perf.h"
 
 void views_init(void) {
   static int initialized;
@@ -23,6 +24,7 @@ void views_init(void) {
   // 注册页面
   router_register("home", view_home_init);
   router_register("led_beep", view_led_beep_init);
+  router_register("lvgl_perf", view_lvgl_perf_init);
 
   // 导航到首页
   router_navigate("home", NULL);

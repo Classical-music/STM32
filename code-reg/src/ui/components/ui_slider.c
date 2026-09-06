@@ -1,4 +1,5 @@
 #include "ui_slider.h"
+#include "ui_common_styles.h"
 #include "task.h"
 #include <stdio.h>
 
@@ -24,9 +25,9 @@ static void ui_slider_print_timing(TickType_t start_tick,
 
 /* 根据 slider 当前值刷新右侧的数值和单位文本。 */
 static void ui_slider_update_value_label(ui_slider_t *component) {
-  lv_label_set_text_fmt(component->value_label, "%ld %s",
-                        (long)lv_slider_get_value(component->slider),
-                        component->unit);
+  snprintf(component->value_text, sizeof(component->value_text), "%ld %s",
+           (long)lv_slider_get_value(component->slider), component->unit);
+  lv_label_set_text_static(component->value_label, component->value_text);
 }
 
 /* slider 数值变化事件：先更新右侧标签，再由外部回调处理业务逻辑。 */
@@ -48,13 +49,12 @@ void ui_slider_create(ui_slider_t *component, lv_obj_t *parent,
   TickType_t end_tick;
 
   /* 创建根容器，统一承载 slider 和右侧数值标签。 */
+  ui_common_styles_init();
   component->container = lv_obj_create(parent);
+  lv_obj_add_style(component->container, ui_style_slider_container(), 0);
   lv_obj_set_size(component->container, LV_SIZE_CONTENT, LV_SIZE_CONTENT);
   /* 容器只负责组合布局，不允许滚动，也不显示自身边框和背景。 */
   lv_obj_clear_flag(component->container, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_pad_all(component->container, 0, 0);
-  lv_obj_set_style_border_width(component->container, 0, 0);
-  lv_obj_set_style_bg_opa(component->container, LV_OPA_TRANSP, 0);
   /* 允许内部元素超出容器范围后仍可见。 */
   lv_obj_add_flag(component->container, LV_OBJ_FLAG_OVERFLOW_VISIBLE);
   /* 容器使用水平 Flex 布局，让 slider 和数值标签从左到右排列。 */
@@ -62,8 +62,6 @@ void ui_slider_create(ui_slider_t *component, lv_obj_t *parent,
   lv_obj_set_flex_flow(component->container, LV_FLEX_FLOW_ROW);
   lv_obj_set_flex_align(component->container, LV_FLEX_ALIGN_START,
                         LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_START);
-  /* slider 与右侧数值标签之间保持 24px 的水平间距。 */
-  lv_obj_set_style_pad_column(component->container, 24, 0);
   container_tick = xTaskGetTickCount();
 
   /* 创建并初始化 slider 的取值范围和当前值。 */
@@ -75,10 +73,12 @@ void ui_slider_create(ui_slider_t *component, lv_obj_t *parent,
   slider_tick = xTaskGetTickCount();
 
   /* 创建右侧数值标签，并在水平布局中自动排列。 */
-  component->value_label = lv_label_create(component->container);
   component->unit = unit;
-  lv_obj_set_style_text_align(component->value_label, LV_TEXT_ALIGN_RIGHT, 0);
-  ui_slider_update_value_label(component);
+  snprintf(component->value_text, sizeof(component->value_text), "%ld %s",
+           (long)current, component->unit);
+  component->value_label = lv_label_create(component->container);
+  lv_label_set_text_static(component->value_label, component->value_text);
+  lv_obj_add_style(component->value_label, ui_style_slider_value_label(), 0);
   label_tick = xTaskGetTickCount();
 
   /* 监听 slider 数值变化，自动刷新数值标签。 */
