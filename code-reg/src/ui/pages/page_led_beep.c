@@ -2,26 +2,24 @@
 #include "beep/task_beep.h"
 #include "components/ui_spinebox.h"
 #include "components/ui_slider.h"
-#include "components/ui_page_base.h"
 #include "components/ui_form.h"
 #include "lvgl.h"
 #include "task.h"
 #include <stdio.h>
+#include <string.h>
 
 #define LED_BEEP_BUTTON_GAP 12
 
 /* 输出页面初始化阶段的采样结果；调用前所有时间点已经完成采样。 */
 static void led_beep_print_timing(TickType_t start_tick,
-                                  TickType_t page_base_tick,
                                   TickType_t title_tick,
                                   TickType_t loop_mode_tick,
                                   TickType_t duration_tick,
                                   TickType_t buttons_tick,
                                   TickType_t end_tick) {
-  printf("[led_beep] page_base=%lu title=%lu loop_mode=%lu "
+  printf("[led_beep] title=%lu loop_mode=%lu "
          "duration=%lu buttons=%lu finalize=%lu total=%lu ms\r\n",
-         (unsigned long)((page_base_tick - start_tick) * portTICK_PERIOD_MS),
-         (unsigned long)((title_tick - page_base_tick) * portTICK_PERIOD_MS),
+         (unsigned long)((title_tick - start_tick) * portTICK_PERIOD_MS),
          (unsigned long)((loop_mode_tick - title_tick) * portTICK_PERIOD_MS),
          (unsigned long)((duration_tick - loop_mode_tick) * portTICK_PERIOD_MS),
          (unsigned long)((buttons_tick - duration_tick) * portTICK_PERIOD_MS),
@@ -230,15 +228,13 @@ static void led_beep_create_loop_controls(void) {
 /* 初始化蜂鸣器控制页面。
  * 默认隐藏的循环模式参数在首次开启循环模式时创建。
  */
-void view_led_beep_init(void *params) {
+void view_led_beep_init(lv_obj_t *page, void *params) {
   TickType_t start_tick = xTaskGetTickCount();
-  TickType_t page_base_tick;
   TickType_t title_tick;
   TickType_t loop_mode_tick;
   TickType_t duration_tick;
   TickType_t buttons_tick;
   TickType_t end_tick;
-  lv_obj_t *scr = lv_scr_act();
   lv_obj_t *title;
   lv_obj_t *play_button;
   lv_obj_t *stop_button;
@@ -249,12 +245,10 @@ void view_led_beep_init(void *params) {
 
   (void)params;
 
-  /* 页面基础布局统一处理尺寸、系统栏和 Dock 避让、边距及 Flex 间距。 */
-  ui_page_base_init(scr);
-  page_base_tick = xTaskGetTickCount();
+  /* 页面容器由路由器统一创建并定位，此处直接在其上构建内容。 */
 
   /* 页面标题。 */
-  title = lv_label_create(scr);
+  title = lv_label_create(page);
   lv_label_set_text(title, "Buzzer Control");
   title_tick = xTaskGetTickCount();
 
@@ -262,7 +256,7 @@ void view_led_beep_init(void *params) {
   g_frequency.row = NULL;
   g_play_time.row = NULL;
   g_stop_time.row = NULL;
-  ui_form_create(&g_form, scr);
+  ui_form_create(&g_form, page);
   ui_form_row_create(&g_form, &loop_mode_form_row, "Loop mode");
   g_loop_checkbox = lv_switch_create(loop_mode_form_row.container);
   ui_form_row_set_control(&loop_mode_form_row, g_loop_checkbox);
@@ -276,7 +270,7 @@ void view_led_beep_init(void *params) {
   duration_tick = xTaskGetTickCount();
 
   /* 创建播放和停止按钮所在的横向操作区。 */
-  button_row = lv_obj_create(scr);
+  button_row = lv_obj_create(page);
   lv_obj_set_width(button_row, LV_PCT(100));
   lv_obj_set_height(button_row, 60);
   lv_obj_clear_flag(button_row, LV_OBJ_FLAG_SCROLLABLE);
@@ -309,7 +303,23 @@ void view_led_beep_init(void *params) {
   buttons_tick = xTaskGetTickCount();
   end_tick = xTaskGetTickCount();
 
-  led_beep_print_timing(start_tick, page_base_tick, title_tick,
+  led_beep_print_timing(start_tick, title_tick,
                         loop_mode_tick, duration_tick, buttons_tick,
                         end_tick);
+}
+
+/* 页面即将被路由缓存淘汰并真正销毁，清空本模块的控件引用。
+ * 这些引用都指向 page 内部的控件，对象树删除后会变成野指针；
+ * 若不清空，下次重建页面时 led_beep_create_loop_controls 会因为
+ * g_frequency.row 非空而误判控件已存在，导致循环模式参数行缺失。
+ */
+void view_led_beep_destroy(lv_obj_t *page) {
+  (void)page;
+
+  g_loop_checkbox = NULL;
+  memset(&g_form, 0, sizeof(g_form));
+  memset(&g_frequency, 0, sizeof(g_frequency));
+  memset(&g_play_time, 0, sizeof(g_play_time));
+  memset(&g_stop_time, 0, sizeof(g_stop_time));
+  memset(&g_single_time, 0, sizeof(g_single_time));
 }

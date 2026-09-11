@@ -6,7 +6,10 @@
 
 #include "lvgl.h"
 
-// 初始化系统栏（在 GUI 初始化阶段调用一次）
+/* 系统栏固定高度，页面需要为该高度预留顶部空间。 */
+#define SYSTEM_BAR_HEIGHT 40
+
+// 在默认屏幕（lv_scr_act()）上创建系统栏，GUI 初始化阶段调用一次
 void system_bar_init(void);
 
 // 系统栏内部使用系统时钟更新时间（HH:MM）

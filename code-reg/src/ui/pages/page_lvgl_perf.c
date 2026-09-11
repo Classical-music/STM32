@@ -1,5 +1,4 @@
 #include "page_lvgl_perf.h"
-#include "../components/ui_page_base.h"
 #include "lvgl.h"
 #include <stdio.h>
 
@@ -18,16 +17,14 @@ static void lvgl_perf_print(const char *name, uint32_t start, uint32_t end) {
     lvgl_perf_print((name), start, end);                                       \
   } while (0)
 
-void view_lvgl_perf_init(void *params) {
-  lv_obj_t *scr = lv_scr_act();
+/* 在页面容器下创建全部待测控件并打印各自的创建耗时。 */
+static void lvgl_perf_build(lv_obj_t *page) {
   lv_obj_t *parent;
   uint32_t total_start;
   uint32_t total_end;
 
-  (void)params;
-
-  ui_page_base_init(scr);
-  parent = lv_obj_create(scr);
+  /* 页面容器的尺寸、位置和基础样式已由路由器统一处理。 */
+  parent = lv_obj_create(page);
   lv_obj_set_size(parent, 1, 1);
   lv_obj_add_flag(parent, LV_OBJ_FLAG_HIDDEN);
 
@@ -139,6 +136,21 @@ void view_lvgl_perf_init(void *params) {
   printf("[lvgl_perf] total widget creation %lu ms\r\n",
          (unsigned long)(total_end - total_start));
   printf("[lvgl_perf] end widget creation timing\r\n");
+}
+
+void view_lvgl_perf_init(lv_obj_t *page, void *params) {
+  (void)params;
+  lvgl_perf_build(page);
+}
+
+void view_lvgl_perf_refresh(lv_obj_t *page, void *params) {
+  (void)params;
+  /*
+   * 本页的用途就是测量控件创建耗时，页面被路由缓存复用时必须清掉上一轮的
+   * 控件重新创建，否则第二次进入不会有任何测量输出。
+   */
+  lv_obj_clean(page);
+  lvgl_perf_build(page);
 }
 
 #undef LVGL_PERF_CREATE

@@ -1,25 +1,75 @@
 #include "page_home.h"
 #include "../common/router.h"
-#include "../components/ui_button.h"
 #include "beep/task_beep.h"
 #include "lvgl.h"
 
 /*
  * 首页菜单项配置。
- * name 用于显示菜单名称，route 用于指定点击后进入的页面路由。
- * route 为空字符串时，按钮只响应点击，不进行页面跳转。
+ * name 用于显示菜单名称，route 用于指定点击后进入的页面路由，
+ * x/y 是卡片相对页面内容区左上角的固定位置。
+ * route 为空字符串时，卡片只响应点击蜂鸣，不进行页面跳转（页面尚未实现）。
  */
 typedef struct {
   const char *name;
   const char *route;
+  lv_coord_t x;
+  lv_coord_t y;
 } home_menu_item_t;
 
+/*
+ * 页面内容区为 432 x 652（页面 480 x 700 减去四周 24 内边距），
+ * 卡片按两列四行固定摆放：列 x 为 0 / 224，行 y 为 0 / 166 / 332 / 498。
+ */
 static const home_menu_item_t home_menu_items[] = {
-    {"LED / Beep", "led_beep"},
-    {"LVGL Perf", "lvgl_perf"},
+    {"LED Ctrl", "", 0, 0},
+    {"Buzzer", "led_beep", 224, 0},
+    {"Sensor", "", 0, 166},
+    {"RTC Clock", "", 224, 166},
+    {"File Mgr", "", 0, 332},
+    {"Media", "", 224, 332},
+    {"LVGL Perf", "lvgl_perf", 0, 498},
 };
 
-/* 菜单按钮点击回调。 */
+/* 卡片固定尺寸。 */
+#define HOME_CARD_WIDTH 208
+#define HOME_CARD_HEIGHT 150
+
+/* 卡片外观：白色圆角加柔和投影，与浅灰页面背景区分。 */
+#define HOME_CARD_RADIUS 12
+#define HOME_CARD_BG_COLOR 0xFFFFFF
+#define HOME_CARD_PRESSED_BG_COLOR 0xE6E6E6
+#define HOME_CARD_SHADOW_COLOR 0x9AA0A6
+#define HOME_CARD_SHADOW_WIDTH 16
+#define HOME_CARD_SHADOW_OPA LV_OPA_20
+#define HOME_CARD_SHADOW_OFS_Y 4
+
+/* 所有卡片共用的样式，只在首次创建首页时构建一次。 */
+static lv_style_t g_home_card_style;
+static bool g_home_card_style_initialized;
+
+static lv_style_t *home_card_style_get(void) {
+  if (g_home_card_style_initialized)
+    return &g_home_card_style;
+
+  lv_style_init(&g_home_card_style);
+
+  lv_style_set_radius(&g_home_card_style, HOME_CARD_RADIUS);
+  lv_style_set_bg_color(&g_home_card_style, lv_color_hex(HOME_CARD_BG_COLOR));
+  lv_style_set_bg_opa(&g_home_card_style, LV_OPA_COVER);
+  lv_style_set_border_width(&g_home_card_style, 0);
+  lv_style_set_shadow_width(&g_home_card_style, HOME_CARD_SHADOW_WIDTH);
+  lv_style_set_shadow_color(&g_home_card_style,
+                            lv_color_hex(HOME_CARD_SHADOW_COLOR));
+  lv_style_set_shadow_opa(&g_home_card_style, HOME_CARD_SHADOW_OPA);
+  lv_style_set_shadow_ofs_y(&g_home_card_style, HOME_CARD_SHADOW_OFS_Y);
+  lv_style_set_pad_all(&g_home_card_style, 0);
+  lv_style_set_text_color(&g_home_card_style, lv_color_black());
+
+  g_home_card_style_initialized = true;
+  return &g_home_card_style;
+}
+
+/* 菜单卡片点击回调。 */
 static void home_menu_btn_event_cb(lv_event_t *event) {
   const home_menu_item_t *item =
       (const home_menu_item_t *)lv_event_get_user_data(event);
@@ -31,30 +81,44 @@ static void home_menu_btn_event_cb(lv_event_t *event) {
 }
 
 /*
- * 创建首页菜单。
- * 使用 Flex 横向排列按钮，容器宽度不足时自动换行。
+ * 创建首页菜单：两列白色圆角卡片网格。
+ * page 由路由器创建并已定位在系统栏和 Dock 之间，卡片尺寸和位置都在
+ * home_menu_items 中写死，不依赖运行时读回页面尺寸。
  */
-void view_home_init(void *params) {
-  lv_obj_t *scr = lv_scr_act();
+void view_home_init(lv_obj_t *page, void *params) {
+  uint32_t item_count;
+  uint32_t i;
 
   (void)params;
 
-  lv_obj_set_layout(scr, LV_LAYOUT_FLEX);
-  lv_obj_set_flex_flow(scr, LV_FLEX_FLOW_ROW_WRAP);
-  lv_obj_set_flex_align(scr, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START,
-                        LV_FLEX_ALIGN_START);
-  lv_obj_set_style_pad_left(scr, 12, 0);
-  lv_obj_set_style_pad_right(scr, 12, 0);
-  lv_obj_set_style_pad_top(scr, 12, 0);
-  lv_obj_set_style_pad_row(scr, 12, 0);
-  lv_obj_set_style_pad_column(scr, 8, 0);
+  item_count = sizeof(home_menu_items) / sizeof(home_menu_items[0]);
 
-  for (uint32_t i = 0; i < sizeof(home_menu_items) / sizeof(home_menu_items[0]);
-       i++) {
-    lv_obj_t *button = ui_button_create(scr, home_menu_items[i].name);
+  /*
+   * ui_page_base 给页面设了 Flex 纵向布局，布局会重排子控件并忽略显式
+   * 设置的坐标，这里必须关掉才能按固定位置摆放卡片。
+   * 布局 ID 由 LVGL 运行时注册、从 1 开始，0 表示不使用任何布局。
+   */
+  lv_obj_set_layout(page, 0);
 
-    lv_obj_set_size(button, 64, 82);
-    lv_obj_add_event_cb(button, home_menu_btn_event_cb, LV_EVENT_CLICKED,
+  for (i = 0; i < item_count; i++) {
+    lv_obj_t *card = lv_btn_create(page);
+    lv_obj_t *label;
+
+    /* 丢弃主题按钮样式，卡片外观完全由共用样式决定。 */
+    lv_obj_remove_style_all(card);
+    lv_obj_add_style(card, home_card_style_get(), 0);
+    lv_obj_set_size(card, HOME_CARD_WIDTH, HOME_CARD_HEIGHT);
+    lv_obj_set_pos(card, home_menu_items[i].x, home_menu_items[i].y);
+
+    /* 主题样式清空后按下反馈丢失，用按下态背景色补回。 */
+    lv_obj_set_style_bg_color(card, lv_color_hex(HOME_CARD_PRESSED_BG_COLOR),
+                              LV_STATE_PRESSED);
+
+    label = lv_label_create(card);
+    lv_label_set_text_static(label, home_menu_items[i].name);
+    lv_obj_center(label);
+
+    lv_obj_add_event_cb(card, home_menu_btn_event_cb, LV_EVENT_CLICKED,
                         (void *)&home_menu_items[i]);
   }
 }

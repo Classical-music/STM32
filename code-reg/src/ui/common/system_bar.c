@@ -41,23 +41,29 @@ void system_bar_init(void) {
   if (g_bar)
     return; // 已初始化
 
-  lv_obj_t *layer = lv_layer_top();
-  g_bar = lv_obj_create(layer);
-  lv_obj_set_size(g_bar, lv_disp_get_hor_res(NULL), 28);
-  lv_obj_align(g_bar, LV_ALIGN_TOP_MID, 0, 0);
+  /* 作为默认屏幕的子节点创建，与页面处于同一层级，不使用顶层图层。 */
+  g_bar = lv_obj_create(lv_scr_act());
+
+  /* 删除主题默认样式，避免圆角、边框和内边距在四周漏出底层背景。 */
+  lv_obj_remove_style_all(g_bar);
+
+  /* 系统栏占满屏幕宽度，固定高度，紧贴屏幕最顶部。 */
+  lv_obj_set_size(g_bar, lv_disp_get_hor_res(NULL), SYSTEM_BAR_HEIGHT);
+  lv_obj_set_pos(g_bar, 0, 0);
   lv_obj_clear_flag(g_bar, LV_OBJ_FLAG_SCROLLABLE);
-  lv_obj_set_style_bg_color(g_bar, lv_color_hex(0x111111), 0);
-  lv_obj_set_style_bg_opa(g_bar, LV_OPA_90, 0);
+
+  /* 不透明深色背景，文字颜色由子控件继承。 */
+  lv_obj_set_style_bg_color(g_bar, lv_color_hex(0x323232), 0);
+  lv_obj_set_style_bg_opa(g_bar, LV_OPA_COVER, 0);
+  lv_obj_set_style_text_color(g_bar, lv_color_hex(0xFFFFFF), 0);
 
   g_time_label = lv_label_create(g_bar);
   lv_label_set_text(g_time_label, "00:00");
   lv_obj_align(g_time_label, LV_ALIGN_LEFT_MID, 8, 0);
-  lv_obj_set_style_text_color(g_time_label, lv_color_white(), 0);
 
   g_bat_label = lv_label_create(g_bar);
   lv_label_set_text(g_bat_label, "100%");
   lv_obj_align(g_bat_label, LV_ALIGN_RIGHT_MID, -8, 0);
-  lv_obj_set_style_text_color(g_bat_label, lv_color_white(), 0);
 
   // 每秒递增内部时钟并更新显示
   g_timer = lv_timer_create(_timer_cb, 1000, NULL);
