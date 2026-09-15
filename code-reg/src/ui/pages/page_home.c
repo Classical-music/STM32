@@ -17,17 +17,17 @@ typedef struct {
 } home_menu_item_t;
 
 /*
- * 页面内容区为 432 x 652（页面 480 x 700 减去四周 24 内边距），
- * 卡片按两列四行固定摆放：列 x 为 0 / 224，行 y 为 0 / 166 / 332 / 498。
+ * 页面内容区为 432 x 636（页面 480 x 684 减去四周 24 内边距），
+ * 卡片按两列四行固定摆放：列 x 为 0 / 224，行 y 为 0 / 162 / 324 / 486。
  */
 static const home_menu_item_t home_menu_items[] = {
-    {"LED Ctrl", "", 0, 0},
-    {"Buzzer", "led_beep", 224, 0},
-    {"Sensor", "", 0, 166},
-    {"RTC Clock", "", 224, 166},
-    {"File Mgr", "", 0, 332},
-    {"Media", "", 224, 332},
-    {"LVGL Perf", "lvgl_perf", 0, 498},
+    {"LED Ctrl", "led", 0, 0},
+    {"Buzzer", "beep", 224, 0},
+    {"Sensor", "", 0, 162},
+    {"RTC Clock", "", 224, 162},
+    {"File Mgr", "", 0, 324},
+    {"Media", "", 224, 324},
+    {"LVGL Perf", "lvgl_perf", 0, 486},
 };
 
 /* 卡片固定尺寸。 */
@@ -92,13 +92,6 @@ void view_home_init(lv_obj_t *page, void *params) {
   (void)params;
 
   item_count = sizeof(home_menu_items) / sizeof(home_menu_items[0]);
-
-  /*
-   * ui_page_base 给页面设了 Flex 纵向布局，布局会重排子控件并忽略显式
-   * 设置的坐标，这里必须关掉才能按固定位置摆放卡片。
-   * 布局 ID 由 LVGL 运行时注册、从 1 开始，0 表示不使用任何布局。
-   */
-  lv_obj_set_layout(page, 0);
 
   for (i = 0; i < item_count; i++) {
     lv_obj_t *card = lv_btn_create(page);

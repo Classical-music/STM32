@@ -19,6 +19,7 @@
  */
 #include "router.h"
 #include "../components/ui_page_base.h"
+#include "system_bar.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -306,23 +307,26 @@ void router_init(void) {
 }
 
 /*
- * 向运行时路由表注册单个页面，并指定页面缓存复用和销毁时的回调。
+ * 向运行时路由表注册单个页面，并指定系统栏标题和页面缓存复用、销毁时的回调。
  *
  * 参数：
  * - name：页面唯一名称；
+ * - title：显示在系统栏左侧的页面标题，可为 NULL；
  * - init_fn：页面容器首次创建后负责填充控件的初始化函数；
  * - refresh_fn：页面从缓存复用时刷新动态内容，可为 NULL 表示原样复用；
  * - destroy_fn：页面被缓存淘汰、真正销毁前清理模块状态，可为 NULL。
  *
  * 返回 0 表示成功，返回 -1 表示路由表已满。
  */
-int router_register_ex(const char *name, route_init_fn_t init_fn,
+int router_register_ex(const char *name, const char *title,
+                       route_init_fn_t init_fn,
                        route_refresh_fn_t refresh_fn,
                        route_destroy_fn_t destroy_fn) {
   /* 从前向后寻找第一个空闲表项。 */
   for (int i = 0; i < MAX_ROUTES; i++) {
     if (routes[i].name == NULL) {
       routes[i].name = name;
+      routes[i].title = title;
       routes[i].init = init_fn;
       routes[i].refresh = refresh_fn;
       routes[i].destroy = destroy_fn;
@@ -331,14 +335,6 @@ int router_register_ex(const char *name, route_init_fn_t init_fn,
   }
 
   return -1;
-}
-
-/*
- * 向运行时路由表注册单个页面，不带刷新和销毁回调。
- * 返回 0 表示成功，返回 -1 表示路由表已满。
- */
-int router_register(const char *name, route_init_fn_t init_fn) {
-  return router_register_ex(name, init_fn, NULL, NULL);
 }
 
 /*
@@ -355,6 +351,7 @@ void router_set_static_routes(const route_entry_t *static_routes, int count) {
 
   for (int i = 0; i < n; i++) {
     routes[i].name = static_routes[i].name;
+    routes[i].title = static_routes[i].title;
     routes[i].init = static_routes[i].init;
     routes[i].refresh = static_routes[i].refresh;
     routes[i].destroy = static_routes[i].destroy;
@@ -427,6 +424,12 @@ static void router_async_cb(void *user_data) {
     /* 离开的页面转入缓存，下次进入同一路由时可以直接复用。 */
     if (leaving != NULL && leaving != restored)
       cache_put(leaving_route, leaving);
+  }
+
+  /* 切换完成后，把当前路由注册的标题同步到系统栏。 */
+  {
+    const route_entry_t *active = find_entry(current_route);
+    system_bar_set_title(active ? active->title : "");
   }
 
   pending_request.op = ROUTER_OP_NONE;

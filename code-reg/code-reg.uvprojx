@@ -694,44 +694,19 @@
               <FilePath>.\src\ui\pages\page_home.c</FilePath>
             </File>
             <File>
-              <FileName>ui_button.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ui\components\ui_button.c</FilePath>
-            </File>
-            <File>
-              <FileName>ui_common_styles.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ui\components\ui_common_styles.c</FilePath>
-            </File>
-            <File>
-              <FileName>ui_spinebox.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ui\components\ui_spinebox.c</FilePath>
-            </File>
-            <File>
-              <FileName>ui_slider.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ui\components\ui_slider.c</FilePath>
-            </File>
-            <File>
-              <FileName>ui_virtual_keyboard.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\ui\common\ui_virtual_keyboard.c</FilePath>
-            </File>
-            <File>
               <FileName>ui_page_base.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ui\components\ui_page_base.c</FilePath>
             </File>
             <File>
-              <FileName>ui_form.c</FileName>
+              <FileName>page_beep.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\ui\components\ui_form.c</FilePath>
+              <FilePath>.\src\ui\pages\page_beep.c</FilePath>
             </File>
             <File>
-              <FileName>page_led_beep.c</FileName>
+              <FileName>page_led.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\ui\pages\page_led_beep.c</FilePath>
+              <FilePath>.\src\ui\pages\page_led.c</FilePath>
             </File>
             <File>
               <FileName>page_lvgl_perf.c</FileName>
@@ -747,6 +722,11 @@
               <FileName>dock.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ui\common\dock.c</FilePath>
+            </File>
+            <File>
+              <FileName>ui_param.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\common\ui_param.c</FilePath>
             </File>
           </Files>
         </Group>

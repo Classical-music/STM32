@@ -21,9 +21,12 @@ set(UI_SOURCES
     "${UI_ROOT}/common/dock.c"
     "${UI_ROOT}/common/router.c"
     "${UI_ROOT}/common/system_bar.c"
-    "${UI_ROOT}/components/ui_button.c"
-    "${UI_ROOT}/pages/home.c"
-    "${UI_ROOT}/pages/led_beep.c"
+    "${UI_ROOT}/common/ui_param.c"
+    "${UI_ROOT}/components/ui_page_base.c"
+    "${UI_ROOT}/pages/page_home.c"
+    "${UI_ROOT}/pages/page_beep.c"
+    "${UI_ROOT}/pages/page_led.c"
+    "${UI_ROOT}/pages/page_lvgl_perf.c"
     "${UI_ROOT}/views/views.c"
 )
 

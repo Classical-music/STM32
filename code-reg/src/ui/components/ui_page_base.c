@@ -3,11 +3,8 @@
 #include "../common/system_bar.h"
 #include <lvgl.h>
 
-/* 页面内容四周统一内边距。 */
+/* 页面内容四周统一内边距：子控件坐标以此为基准的内容区摆放。 */
 #define UI_PAGE_BASE_PADDING 24
-
-/* 页面中相邻内容块的垂直间距。 */
-#define UI_PAGE_BASE_CONTENT_GAP 24
 
 /* 页面背景色：浅灰，与深色的系统栏、Dock 区分。 */
 #define UI_PAGE_BASE_BG_COLOR 0xDADADA
@@ -51,12 +48,10 @@ lv_obj_t *ui_page_base_create(lv_obj_t *root) {
                   lv_disp_get_ver_res(NULL) - SYSTEM_BAR_HEIGHT - DOCK_HEIGHT);
   lv_obj_set_pos(page, 0, SYSTEM_BAR_HEIGHT);
 
-  /* 页面内容纵向依次排列，子控件由各页面直接创建在 page 上。 */
-  lv_obj_set_layout(page, LV_LAYOUT_FLEX);
-  lv_obj_set_flex_flow(page, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_flex_align(page, LV_FLEX_ALIGN_START, LV_FLEX_ALIGN_START,
-                        LV_FLEX_ALIGN_START);
-  lv_obj_set_style_pad_row(page, UI_PAGE_BASE_CONTENT_GAP, 0);
+  /*
+   * 页面不预设任何布局：各页面都用固定坐标摆放子控件，Flex 布局会重排
+   * 子控件并忽略显式坐标，同时带来额外的排版开销。
+   */
 
   /* 内容超高时直接裁剪，避免页面绘制到系统栏或 Dock 上。 */
   lv_obj_clear_flag(page, LV_OBJ_FLAG_SCROLLABLE);

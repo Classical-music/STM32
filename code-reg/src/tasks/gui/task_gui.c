@@ -28,5 +28,5 @@ void vGuiTask(void *arg) {
 }
 
 void taskGuiInit(void) {
-  xTaskCreate(vGuiTask, "cmd", 1024, NULL, 2, NULL); //
+  xTaskCreate(vGuiTask, "cmd", 2048, NULL, 2, NULL); //
 }

@@ -38,14 +38,12 @@ typedef void (*route_destroy_fn_t)(lv_obj_t *page);
 // 内部通过 lv_scr_act() 取得承载系统栏、Dock 和页面的默认屏幕
 void router_init(void);
 
-// 注册一个路由（不带刷新和销毁回调）
-// 返回 0 成功，-1 失败（例如注册表已满）
-int router_register(const char *name, route_init_fn_t init_fn);
-
-// 注册一个路由，并指定页面缓存复用和销毁时的回调
+// 注册一个路由，并指定系统栏标题、页面缓存复用和销毁时的回调
+// title 为显示在系统栏左侧的页面标题，允许传 NULL
 // refresh_fn / destroy_fn 允许传 NULL
 // 返回 0 成功，-1 失败（例如注册表已满）
-int router_register_ex(const char *name, route_init_fn_t init_fn,
+int router_register_ex(const char *name, const char *title,
+                       route_init_fn_t init_fn,
                        route_refresh_fn_t refresh_fn,
                        route_destroy_fn_t destroy_fn);
 
@@ -69,6 +67,7 @@ int router_reset(const char *name, void *params);
 // 静态路由表项类型（可放在只读区/Flash）
 typedef struct {
   const char *name;
+  const char *title; // 显示在系统栏左侧的页面标题，可为 NULL
   route_init_fn_t init;
   route_refresh_fn_t refresh;
   route_destroy_fn_t destroy;

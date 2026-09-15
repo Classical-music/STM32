@@ -1,16 +1,20 @@
 #include "system_bar.h"
 #include "lvgl.h"
 #include <stdio.h>
+#include <string.h>
 // 设备可能不支持标准 time()/localtime(), 使用内部计时器从 12:00 启动
 
 static lv_obj_t *g_bar = NULL;
+static lv_obj_t *g_title_label = NULL;
 static lv_obj_t *g_time_label = NULL;
-static lv_obj_t *g_bat_label = NULL;
 static lv_timer_t *g_timer = NULL;
 
 static int g_hour = 12;
 static int g_min = 0;
 static int g_sec = 0;
+
+/* 最近一次设置的标题，初始化前后都保存在这里，避免状态丢失。 */
+static char g_title[SYSTEM_BAR_TITLE_MAX_LEN] = "";
 
 static void _update_time_label(void) {
   char buf[6] = "00:00";
@@ -57,19 +61,32 @@ void system_bar_init(void) {
   lv_obj_set_style_bg_opa(g_bar, LV_OPA_COVER, 0);
   lv_obj_set_style_text_color(g_bar, lv_color_hex(0xFFFFFF), 0);
 
+  /* 左侧：页面标题（使用全局默认字体 montserrat_18）。 */
+  g_title_label = lv_label_create(g_bar);
+  lv_label_set_text(g_title_label, g_title);
+  lv_obj_align(g_title_label, LV_ALIGN_LEFT_MID, 12, 0);
+
+  /* 右侧：时间。 */
   g_time_label = lv_label_create(g_bar);
   lv_label_set_text(g_time_label, "00:00");
-  lv_obj_align(g_time_label, LV_ALIGN_LEFT_MID, 8, 0);
-
-  g_bat_label = lv_label_create(g_bar);
-  lv_label_set_text(g_bat_label, "100%");
-  lv_obj_align(g_bat_label, LV_ALIGN_RIGHT_MID, -8, 0);
+  lv_obj_align(g_time_label, LV_ALIGN_RIGHT_MID, -12, 0);
 
   // 每秒递增内部时钟并更新显示
   g_timer = lv_timer_create(_timer_cb, 1000, NULL);
 
   // 立即刷新一次
   _update_time_label();
+}
+
+void system_bar_set_title(const char *title) {
+  if (title)
+    strncpy(g_title, title, sizeof(g_title) - 1);
+  else
+    g_title[0] = '\0';
+  g_title[sizeof(g_title) - 1] = '\0';
+
+  if (g_title_label)
+    lv_label_set_text(g_title_label, g_title);
 }
 
 // 不再提供外部设置时间的接口，系统栏始终使用系统时钟
