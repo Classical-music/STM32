@@ -5,6 +5,7 @@
 #include "key/key.h"
 #include "lcd/lcd.h"
 #include "led/led.h"
+#include "rtc/bsp_rtc.h"
 #include "touch/bsp_touch.h"
 #include "tpad/tpad.h"
 #include "usart/usart.h"
@@ -19,6 +20,8 @@ void board_init(void) {
 
   key_init();  // 初始化 key 驱动
   tpad_init(); // 初始化 tpad 驱动
+
+  bsp_rtc_init(); // 初始化 RTC 秒计数器(备份域魔数保证复位后继续走时)
 
   // wwdg_init(0x7F, 0x5F, WWDG_WDGTB_8); // 初始化看门狗
 

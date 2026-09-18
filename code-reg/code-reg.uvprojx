@@ -520,6 +520,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\bsp\sram\bsp_sram.c</FilePath>
             </File>
+            <File>
+              <FileName>bsp_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\rtc\bsp_rtc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -639,6 +644,11 @@
               <FilePath>.\src\tasks\beep\task_beep.c</FilePath>
             </File>
             <File>
+              <FileName>task_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\tasks\rtc\task_rtc.c</FilePath>
+            </File>
+            <File>
               <FileName>task_led.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\tasks\led\task_led.c</FilePath>
@@ -699,6 +709,11 @@
               <FilePath>.\src\ui\components\ui_page_base.c</FilePath>
             </File>
             <File>
+              <FileName>ui_popup.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\components\ui_popup.c</FilePath>
+            </File>
+            <File>
               <FileName>page_beep.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ui\pages\page_beep.c</FilePath>
@@ -714,6 +729,11 @@
               <FilePath>.\src\ui\pages\page_lvgl_perf.c</FilePath>
             </File>
             <File>
+              <FileName>page_calendar.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\pages\page_calendar.c</FilePath>
+            </File>
+            <File>
               <FileName>system_bar.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ui\common\system_bar.c</FilePath>
@@ -726,7 +746,7 @@
             <File>
               <FileName>ui_param.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\ui\common\ui_param.c</FilePath>
+              <FilePath>.\src\ui\components\ui_param.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -1,5 +1,5 @@
 #include "page_beep.h"
-#include "../common/ui_param.h"
+#include "../components/ui_param.h"
 #include "beep/task_beep.h"
 #include "lvgl.h"
 #include "task.h"
@@ -19,33 +19,24 @@
 #define BEEP_CARD_WIDTH 432
 #define BEEP_CARD_HEIGHT 520
 
-/* 参数行统一布局（相对 section 容器）：
- * 名称在左上、数值在名称下方、减 / 加按钮在右侧。
+/* 参数行统一布局（相对 section 容器）：单行内名称标签在左、
+ * [− 值 +] 步进组由 ui_param 组件摆放。
  * 单次模式的时长行与循环模式的频率、占空比行样式完全一致。 */
 #define ROW_NAME_X 24
-#define ROW_STEP_WIDTH 90
-#define ROW_STEP_HEIGHT 64
-#define ROW_MINUS_X 228
-#define ROW_PLUS_X 330
+#define ROW_HEIGHT 48
+#define ROW_TEXT_DY 12
 
 /* 单次模式：时长参数行放在第一行位置。 */
-#define SINGLE_NAME_Y 28
-#define SINGLE_VALUE_Y 62
-#define SINGLE_STEP_Y 44
+#define SINGLE_DURATION_ROW_Y 28
 
 /* 循环模式：频率、占空比两行。 */
-#define LOOP_FREQ_NAME_Y 28
-#define LOOP_FREQ_VALUE_Y 62
-#define LOOP_FREQ_STEP_Y 44
-#define LOOP_DUTY_NAME_Y 176
-#define LOOP_DUTY_VALUE_Y 210
-#define LOOP_DUTY_STEP_Y 192
+#define LOOP_FREQ_ROW_Y 28
+#define LOOP_DUTY_ROW_Y 88
 
-/* 启动 / 停止按钮位置（相对 section 容器，两种模式一致）。 */
+/* 启停切换按钮位置（单一按钮，水平居中，相对 section 容器）。 */
 #define ACTION_WIDTH 180
 #define ACTION_HEIGHT 72
-#define ACTION_START_X 30
-#define ACTION_STOP_X 222
+#define ACTION_X ((BEEP_CARD_WIDTH - ACTION_WIDTH) / 2)
 #define ACTION_Y_SINGLE 360
 #define ACTION_Y_LOOP 340
 
@@ -58,14 +49,17 @@
 #define BEEP_COLOR_STOP_PRESSED 0xD5D5D5
 #define BEEP_COLOR_TEXT_DARK 0x1A1A1A
 
-/* ==================== 长按加速 ==================== */
-/* 可调参数与步进按钮：复用 ui_param 基础组件。 */
-static ui_param_t g_duration = {100, 10, 10000, 10, "ms", "%ld %s",
-                                NULL, NULL, NULL};
-static ui_param_t g_frequency = {50, 1, 100, 1, "Hz", "%ld %s",
-                                 NULL, NULL, NULL};
-static ui_param_t g_duty = {50, 5, 95, 1, "%", "%ld %s",
-                            NULL, NULL, NULL};
+/* ==================== 可调参数 ====================
+ * 参数与步进控件复用 ui_param 基础组件。
+ * 频率 / 占空比在循环播放运行中调整时立即重设蜂鸣周期。 */
+static void beep_loop_param_changed(ui_param_t *param);
+
+static ui_param_t g_duration = {100, 10, 10000, 10, " ms", NULL, NULL,
+                                NULL, NULL};
+static ui_param_t g_frequency = {50, 1, 100, 1, " Hz", NULL, NULL,
+                                 NULL, beep_loop_param_changed};
+static ui_param_t g_duty = {50, 5, 95, 1, "%", NULL, NULL,
+                            NULL, beep_loop_param_changed};
 
 /* 步进按钮上下文（静态分配，页面销毁时清零）。 */
 static ui_step_btn_t g_single_minus = {NULL, -1, 0};
@@ -80,7 +74,13 @@ static lv_obj_t *g_pill_single;
 static lv_obj_t *g_pill_loop;
 static lv_obj_t *g_section_single;
 static lv_obj_t *g_section_loop;
+static lv_obj_t *g_action_single;
+static lv_obj_t *g_action_loop;
 static bool g_loop_mode;
+/* 蜂鸣器运行中：单一硬件通道，两个分区共用同一个启停状态。 */
+static bool g_beep_running;
+/* 单次播放完成定时器：到期后把按钮复位为 Start，提前停止时删除。 */
+static lv_timer_t *g_single_timer;
 
 /* ==================== 共用样式 ====================
  * 所有自定义样式只在首次创建页面时构建一次，页面控件直接引用。
@@ -90,9 +90,7 @@ enum {
   STYLE_SECTION,
   STYLE_PILL,
   STYLE_START_BTN,
-  STYLE_STOP_BTN,
   STYLE_NAME_LABEL,
-  STYLE_VALUE_LABEL,
   STYLE_COUNT
 };
 
@@ -131,7 +129,7 @@ static void beep_styles_init(void) {
   lv_style_set_text_color(&g_styles[STYLE_PILL],
                           lv_color_hex(BEEP_COLOR_TEXT_DARK));
 
-  /* 启动按钮：蓝色。 */
+  /* 启停切换按钮：默认（停止态）蓝色，运行态颜色由刷新函数覆盖。 */
   lv_style_init(&g_styles[STYLE_START_BTN]);
   lv_style_set_bg_color(&g_styles[STYLE_START_BTN],
                         lv_color_hex(BEEP_COLOR_BLUE));
@@ -141,75 +139,34 @@ static void beep_styles_init(void) {
   lv_style_set_pad_all(&g_styles[STYLE_START_BTN], 0);
   lv_style_set_text_color(&g_styles[STYLE_START_BTN], lv_color_white());
 
-  /* 停止按钮：浅灰。 */
-  lv_style_init(&g_styles[STYLE_STOP_BTN]);
-  lv_style_set_bg_color(&g_styles[STYLE_STOP_BTN],
-                        lv_color_hex(BEEP_COLOR_STOP_BG));
-  lv_style_set_bg_opa(&g_styles[STYLE_STOP_BTN], LV_OPA_COVER);
-  lv_style_set_radius(&g_styles[STYLE_STOP_BTN], 12);
-  lv_style_set_border_width(&g_styles[STYLE_STOP_BTN], 0);
-  lv_style_set_pad_all(&g_styles[STYLE_STOP_BTN], 0);
-  lv_style_set_text_color(&g_styles[STYLE_STOP_BTN],
-                          lv_color_hex(BEEP_COLOR_TEXT_DARK));
-
-  /* 参数名称与数值文字。 */
+  /* 参数名称文字（数值样式由 ui_param 组件提供）。 */
   lv_style_init(&g_styles[STYLE_NAME_LABEL]);
   lv_style_set_text_color(&g_styles[STYLE_NAME_LABEL],
-                          lv_color_hex(BEEP_COLOR_TEXT_DARK));
-
-  lv_style_init(&g_styles[STYLE_VALUE_LABEL]);
-  lv_style_set_text_color(&g_styles[STYLE_VALUE_LABEL],
                           lv_color_hex(BEEP_COLOR_TEXT_DARK));
 
   g_styles_initialized = true;
 }
 
 /* ==================== 数值显示与步进 ====================
- * 步进机制（短按 / 长按加速 / 范围夹紧）由 ui_param 基础组件提供，
- * 蜂鸣器页面仅保留自身布局：名称与数值在左侧堆叠，− / + 按钮在右侧。 */
+ * 步进机制与 [− 值 +] 步进组布局全部由 ui_param 基础组件提供，
+ * 蜂鸣器页面仅负责名称标签与行的摆放。 */
 
-/* 创建启动 / 停止按钮。 */
-static lv_obj_t *beep_create_action_btn(lv_obj_t *parent, const char *text,
-                                        bool is_start, lv_coord_t x,
-                                        lv_coord_t y) {
+/* 创建启停切换按钮（外观与文字由 beep_refresh_action 按运行状态刷新）。 */
+static lv_obj_t *beep_create_action_btn(lv_obj_t *parent, lv_coord_t y) {
   lv_obj_t *button = lv_btn_create(parent);
 
   lv_obj_remove_style_all(button);
-  lv_obj_add_style(button,
-                   is_start ? &g_styles[STYLE_START_BTN]
-                            : &g_styles[STYLE_STOP_BTN],
-                   0);
+  lv_obj_add_style(button, &g_styles[STYLE_START_BTN], 0);
   lv_obj_set_size(button, ACTION_WIDTH, ACTION_HEIGHT);
-  lv_obj_set_pos(button, x, y);
-  lv_obj_set_style_bg_color(
-      button, lv_color_hex(is_start ? BEEP_COLOR_BLUE_PRESSED
-                                    : BEEP_COLOR_STOP_PRESSED),
-      LV_STATE_PRESSED);
+  lv_obj_set_pos(button, ACTION_X, y);
 
   {
     lv_obj_t *label = lv_label_create(button);
-    lv_label_set_text_static(label, text);
+    lv_label_set_text_static(label, "Start");
     lv_obj_center(label);
   }
 
   return button;
-}
-
-/* 创建参数名称 + 数值文本，两者都按 x 左对齐摆放。 */
-static void beep_create_value_text(lv_obj_t *parent, const char *name,
-                                   lv_coord_t name_y, lv_coord_t value_y,
-                                   lv_obj_t **value_label_out) {
-  lv_obj_t *name_label = lv_label_create(parent);
-  lv_obj_t *value_label = lv_label_create(parent);
-
-  lv_obj_add_style(name_label, &g_styles[STYLE_NAME_LABEL], 0);
-  lv_label_set_text_static(name_label, name);
-  lv_obj_set_pos(name_label, ROW_NAME_X, name_y);
-
-  lv_obj_add_style(value_label, &g_styles[STYLE_VALUE_LABEL], 0);
-  lv_obj_set_pos(value_label, ROW_NAME_X, value_y);
-
-  *value_label_out = value_label;
 }
 
 /* ==================== 模式切换 ==================== */
@@ -258,36 +215,127 @@ static void beep_pill_loop_event_cb(lv_event_t *event) {
 
 /* ==================== 启动 / 停止 ==================== */
 
-static void beep_start_event_cb(lv_event_t *event) {
-  (void)event;
+/* 按频率与占空比折算播放 / 停止时长：
+ * 频率参数暂未传给底层驱动（GPIO 开关），按周期换算。 */
+static void beep_loop_timing(uint32_t *play_ms_out, uint32_t *stop_ms_out) {
+  int32_t period_ms = 1000 / g_frequency.value;
+  int32_t play_ms;
+  int32_t stop_ms;
+
+  if (period_ms < 10)
+    period_ms = 10;
+  if (period_ms > 5000)
+    period_ms = 5000;
+
+  play_ms = period_ms * g_duty.value / 100;
+  stop_ms = period_ms - play_ms;
+  if (play_ms < 10)
+    play_ms = 10;
+  if (stop_ms < 10)
+    stop_ms = 10;
+
+  *play_ms_out = (uint32_t)play_ms;
+  *stop_ms_out = (uint32_t)stop_ms;
+}
+
+/* 循环播放运行中频率 / 占空比变化：立即按新周期重新开始播放。 */
+static void beep_loop_param_changed(ui_param_t *param) {
+  uint32_t play_ms;
+  uint32_t stop_ms;
+
+  (void)param;
+
+  if (!g_beep_running || !g_loop_mode)
+    return;
+
+  beep_loop_timing(&play_ms, &stop_ms);
+  playBeepLoop(play_ms, stop_ms);
+}
+
+/* 按当前模式把参数输出到蜂鸣器硬件。 */
+static void beep_hw_start(void) {
+  uint32_t play_ms;
+  uint32_t stop_ms;
 
   if (g_loop_mode) {
-    /* 频率参数暂未传给底层驱动（GPIO 开关），按周期折算播放和间隔时长。 */
-    int32_t period_ms = 1000 / g_frequency.value;
-    int32_t play_ms;
-    int32_t stop_ms;
-
-    if (period_ms < 10)
-      period_ms = 10;
-    if (period_ms > 5000)
-      period_ms = 5000;
-
-    play_ms = period_ms * g_duty.value / 100;
-    stop_ms = period_ms - play_ms;
-    if (play_ms < 10)
-      play_ms = 10;
-    if (stop_ms < 10)
-      stop_ms = 10;
-
-    playBeepLoop((uint32_t)play_ms, (uint32_t)stop_ms);
+    beep_loop_timing(&play_ms, &stop_ms);
+    playBeepLoop(play_ms, stop_ms);
   } else {
     playBeep((uint32_t)g_duration.value);
   }
 }
 
-static void beep_stop_event_cb(lv_event_t *event) {
+/* 刷新两个分区启停按钮的外观与文字（共用同一运行状态）。 */
+static void beep_refresh_action(void) {
+  lv_obj_t *buttons[2] = {g_action_single, g_action_loop};
+  const char *text = g_beep_running ? "Stop" : "Start";
+  uint32_t i;
+
+  for (i = 0; i < 2; i++) {
+    lv_obj_t *button = buttons[i];
+    lv_obj_t *label;
+
+    if (button == NULL)
+      continue;
+
+    if (g_beep_running) {
+      lv_obj_set_style_bg_color(button, lv_color_hex(BEEP_COLOR_STOP_BG), 0);
+      lv_obj_set_style_bg_color(button, lv_color_hex(BEEP_COLOR_STOP_PRESSED),
+                                LV_STATE_PRESSED);
+      lv_obj_set_style_text_color(button, lv_color_hex(BEEP_COLOR_TEXT_DARK),
+                                  0);
+    } else {
+      lv_obj_set_style_bg_color(button, lv_color_hex(BEEP_COLOR_BLUE), 0);
+      lv_obj_set_style_bg_color(button, lv_color_hex(BEEP_COLOR_BLUE_PRESSED),
+                                LV_STATE_PRESSED);
+      lv_obj_set_style_text_color(button, lv_color_white(), 0);
+    }
+
+    label = lv_obj_get_child(button, 0);
+    if (label != NULL)
+      lv_label_set_text_static(label, text);
+  }
+}
+
+/* 删除待触发的单次播放完成定时器。 */
+static void beep_cancel_single_timer(void) {
+  if (g_single_timer != NULL) {
+    lv_timer_del(g_single_timer);
+    g_single_timer = NULL;
+  }
+}
+
+/* 单次播放时长到期：把按钮复位为 Start。
+ * repeat_count 为 1，回调结束后定时器由 LVGL 自动删除。 */
+static void beep_single_done_cb(lv_timer_t *timer) {
+  (void)timer;
+
+  g_single_timer = NULL;
+  g_beep_running = false;
+  beep_refresh_action();
+}
+
+/* 启停切换：停止态按当前模式启动，运行中点击立即停止。
+ * 单次播放时长已知，挂一个到期定时器自动复位按钮。 */
+static void beep_toggle_event_cb(lv_event_t *event) {
   (void)event;
-  stopBeep();
+
+  if (g_beep_running) {
+    beep_cancel_single_timer();
+    stopBeep();
+    g_beep_running = false;
+  } else {
+    beep_hw_start();
+    g_beep_running = true;
+
+    if (!g_loop_mode) {
+      g_single_timer = lv_timer_create(beep_single_done_cb,
+                                       (uint32_t)g_duration.value, NULL);
+      lv_timer_set_repeat_count(g_single_timer, 1);
+    }
+  }
+
+  beep_refresh_action();
 }
 
 /* ==================== 页面构建 ==================== */
@@ -323,59 +371,53 @@ static lv_obj_t *beep_create_section(lv_obj_t *parent) {
   return section;
 }
 
-/* 创建一组参数行：名称 + 数值 + 右侧减 / 加按钮（步进按钮由 ui_param 组件创建）。
+/* 创建一行可调参数：透明容器内名称标签 + [− 值 +] 步进组（ui_param 组件）。
  * 单次模式的时长行和循环模式的频率、占空比行完全一致。 */
 static void beep_create_param_row(lv_obj_t *parent, const char *name,
-                                  lv_coord_t name_y, lv_coord_t value_y,
-                                  lv_coord_t step_y, ui_param_t *param,
-                                  ui_step_btn_t *minus, ui_step_btn_t *plus) {
-  minus->param = param;
-  plus->param = param;
+                                  ui_param_t *param, ui_step_btn_t *minus,
+                                  ui_step_btn_t *plus, lv_coord_t y) {
+  lv_obj_t *row = lv_obj_create(parent);
+  lv_obj_t *name_label = lv_label_create(row);
 
-  beep_create_value_text(parent, name, name_y, value_y, &param->label);
-  ui_param_update_label(param);
-  ui_param_create_step_btn(parent, "-", minus, ROW_MINUS_X, step_y,
-                           ROW_STEP_WIDTH, ROW_STEP_HEIGHT);
-  ui_param_create_step_btn(parent, "+", plus, ROW_PLUS_X, step_y,
-                           ROW_STEP_WIDTH, ROW_STEP_HEIGHT);
+  lv_obj_remove_style_all(row);
+  lv_obj_add_style(row, &g_styles[STYLE_SECTION], 0);
+  lv_obj_set_size(row, BEEP_CARD_WIDTH, ROW_HEIGHT);
+  lv_obj_set_pos(row, 0, y);
+  lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+
+  lv_obj_add_style(name_label, &g_styles[STYLE_NAME_LABEL], 0);
+  lv_label_set_text_static(name_label, name);
+  lv_obj_set_pos(name_label, ROW_NAME_X, ROW_TEXT_DY);
+
+  ui_param_create_stepper(row, param, minus, plus);
 }
 
-/* 创建启动 / 停止按钮行。 */
-static void beep_create_action_row(lv_obj_t *parent, lv_coord_t y) {
-  lv_obj_t *start =
-      beep_create_action_btn(parent, "Start", true, ACTION_START_X, y);
-  lv_obj_t *stop =
-      beep_create_action_btn(parent, "Stop", false, ACTION_STOP_X, y);
-
-  lv_obj_add_event_cb(start, beep_start_event_cb, LV_EVENT_CLICKED, NULL);
-  lv_obj_add_event_cb(stop, beep_stop_event_cb, LV_EVENT_CLICKED, NULL);
-}
-
-/* 单次模式分区：时长参数行 + 启动 / 停止。 */
+/* 单次模式分区：时长参数行 + 启停切换按钮。 */
 static void beep_create_single_section(lv_obj_t *card) {
   lv_obj_t *section = beep_create_section(card);
 
   g_section_single = section;
 
-  beep_create_param_row(section, "Duration", SINGLE_NAME_Y, SINGLE_VALUE_Y,
-                        SINGLE_STEP_Y, &g_duration, &g_single_minus,
-                        &g_single_plus);
-  beep_create_action_row(section, ACTION_Y_SINGLE);
+  beep_create_param_row(section, "Duration", &g_duration, &g_single_minus,
+                        &g_single_plus, SINGLE_DURATION_ROW_Y);
+  g_action_single = beep_create_action_btn(section, ACTION_Y_SINGLE);
+  lv_obj_add_event_cb(g_action_single, beep_toggle_event_cb, LV_EVENT_CLICKED,
+                      NULL);
 }
 
-/* 循环模式分区：频率、占空比两行 + 启动 / 停止。 */
+/* 循环模式分区：频率、占空比两行 + 启停切换按钮。 */
 static void beep_create_loop_section(lv_obj_t *card) {
   lv_obj_t *section = beep_create_section(card);
 
   g_section_loop = section;
 
-  beep_create_param_row(section, "Frequency", LOOP_FREQ_NAME_Y,
-                        LOOP_FREQ_VALUE_Y, LOOP_FREQ_STEP_Y, &g_frequency,
-                        &g_freq_minus, &g_freq_plus);
-  beep_create_param_row(section, "Duty", LOOP_DUTY_NAME_Y, LOOP_DUTY_VALUE_Y,
-                        LOOP_DUTY_STEP_Y, &g_duty, &g_duty_minus,
-                        &g_duty_plus);
-  beep_create_action_row(section, ACTION_Y_LOOP);
+  beep_create_param_row(section, "Frequency", &g_frequency, &g_freq_minus,
+                        &g_freq_plus, LOOP_FREQ_ROW_Y);
+  beep_create_param_row(section, "Duty", &g_duty, &g_duty_minus, &g_duty_plus,
+                        LOOP_DUTY_ROW_Y);
+  g_action_loop = beep_create_action_btn(section, ACTION_Y_LOOP);
+  lv_obj_add_event_cb(g_action_loop, beep_toggle_event_cb, LV_EVENT_CLICKED,
+                      NULL);
 
   /* 默认显示单次模式，循环分区隐藏。 */
   lv_obj_add_flag(section, LV_OBJ_FLAG_HIDDEN);
@@ -389,8 +431,12 @@ void view_beep_init(lv_obj_t *page, void *params) {
 
   (void)params;
 
-  /* 页面可能因缓存淘汰被重建，模式状态复位为默认的单次模式。 */
+  /* 页面可能因缓存淘汰被重建，复位为默认单次模式；
+   * UI 与硬件状态需保持一致，重建时顺带停止仍在播放的蜂鸣。 */
   g_loop_mode = false;
+  g_beep_running = false;
+  beep_cancel_single_timer();
+  stopBeep();
 
   /* 页面容器由路由器统一创建并定位，子控件按固定坐标摆放。 */
   beep_styles_init();
@@ -416,8 +462,8 @@ void view_beep_init(lv_obj_t *page, void *params) {
   beep_create_loop_section(card);
 
   /* 默认单次模式。 */
-  g_loop_mode = false;
   beep_refresh_pills();
+  beep_refresh_action();
 
   end_tick = xTaskGetTickCount();
   printf("[beep] total=%lu ms\r\n",
@@ -432,6 +478,11 @@ void view_beep_destroy(lv_obj_t *page) {
   g_pill_loop = NULL;
   g_section_single = NULL;
   g_section_loop = NULL;
+  g_action_single = NULL;
+  g_action_loop = NULL;
+  g_beep_running = false;
+  /* 定时器回调引用页面控件，销毁前必须删除。 */
+  beep_cancel_single_timer();
   g_duration.label = NULL;
   g_frequency.label = NULL;
   g_duty.label = NULL;

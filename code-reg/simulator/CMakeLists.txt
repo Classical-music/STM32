@@ -21,13 +21,21 @@ set(UI_SOURCES
     "${UI_ROOT}/common/dock.c"
     "${UI_ROOT}/common/router.c"
     "${UI_ROOT}/common/system_bar.c"
-    "${UI_ROOT}/common/ui_param.c"
     "${UI_ROOT}/components/ui_page_base.c"
+    "${UI_ROOT}/components/ui_param.c"
+    "${UI_ROOT}/components/ui_popup.c"
     "${UI_ROOT}/pages/page_home.c"
     "${UI_ROOT}/pages/page_beep.c"
+    "${UI_ROOT}/pages/page_calendar.c"
     "${UI_ROOT}/pages/page_led.c"
     "${UI_ROOT}/pages/page_lvgl_perf.c"
     "${UI_ROOT}/views/views.c"
+)
+
+# 与目标板同源的纯 C 任务层代码 + 其对 bsp 层的模拟器桩实现
+set(TASK_SOURCES
+    "${PROJECT_ROOT}/src/tasks/rtc/task_rtc.c"
+    "${CMAKE_CURRENT_LIST_DIR}/stubs/rtc/bsp_rtc_sim.c"
 )
 
 add_executable(code_reg_lvgl_simulator
@@ -36,6 +44,7 @@ add_executable(code_reg_lvgl_simulator
     "${WINDOWS_PORT}/lv_port_indev.c"
     ${LVGL_SOURCES}
     ${UI_SOURCES}
+    ${TASK_SOURCES}
 )
 
 target_include_directories(code_reg_lvgl_simulator PRIVATE
@@ -47,6 +56,8 @@ target_include_directories(code_reg_lvgl_simulator PRIVATE
     "${LVGL_SRC}"
     "${UI_ROOT}"
     "${PROJECT_ROOT}/src"
+    "${PROJECT_ROOT}/src/tasks"
+    "${PROJECT_ROOT}/src/bsp"
 )
 
 target_compile_definitions(code_reg_lvgl_simulator PRIVATE

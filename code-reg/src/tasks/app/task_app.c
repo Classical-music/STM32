@@ -5,6 +5,7 @@
 #include "gui/task_gui.h"
 #include "key/task_key.h"
 #include "led/task_led.h"
+#include "rtc/task_rtc.h"
 #include "touch/task_touch.h"
 #include "task.h"
 #include <stdio.h>
@@ -61,6 +62,7 @@ void vAppTask(void *arg) {
 }
 
 void appTaskInit(void) {
+  rtcTaskInit();     // 初始化 RTC 服务(以编译时间为基准)
   ledTaskInit();     // 创建 LED 子任务
   beepTaskInit();    // 创建 Beep 子任务
   keyTaskInit();     // 创建 Key 子任务

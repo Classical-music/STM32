@@ -3,6 +3,7 @@
 #include "../common/router.h"
 #include "../common/system_bar.h"
 #include "../pages/page_beep.h"
+#include "../pages/page_calendar.h"
 #include "../pages/page_home.h"
 #include "../pages/page_led.h"
 #include "../pages/page_lvgl_perf.h"
@@ -43,6 +44,10 @@ void views_init(void) {
   // 否则下次重建会误判控件已存在。
   router_register_ex("beep", "Buzzer Control", view_beep_init, NULL,
                      view_beep_destroy);
+  // calendar 内部有 1s 定时器自刷新，缓存复用时无需额外 refresh；
+  // 模块保存了控件引用和定时器，销毁时需要清空。
+  router_register_ex("calendar", "Calendar", view_calendar_init, NULL,
+                     view_calendar_destroy);
   // lvgl_perf 的用途是测量控件创建耗时，缓存复用时需要重建控件重新测量。
   router_register_ex("lvgl_perf", "LVGL Perf", view_lvgl_perf_init,
                      view_lvgl_perf_refresh, NULL);

@@ -1,5 +1,5 @@
 #include "page_led.h"
-#include "../common/ui_param.h"
+#include "../components/ui_param.h"
 #include "led/task_led.h"
 #include "lvgl.h"
 #include "task.h"

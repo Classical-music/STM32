@@ -1,24 +1,22 @@
 #include "system_bar.h"
+#include "rtc/task_rtc.h"
 #include "lvgl.h"
 #include <stdio.h>
 #include <string.h>
-// 设备可能不支持标准 time()/localtime(), 使用内部计时器从 12:00 启动
 
 static lv_obj_t *g_bar = NULL;
 static lv_obj_t *g_title_label = NULL;
 static lv_obj_t *g_time_label = NULL;
 static lv_timer_t *g_timer = NULL;
 
-static int g_hour = 12;
-static int g_min = 0;
-static int g_sec = 0;
-
 /* 最近一次设置的标题，初始化前后都保存在这里，避免状态丢失。 */
 static char g_title[SYSTEM_BAR_TITLE_MAX_LEN] = "";
 
 static void _update_time_label(void) {
   char buf[6] = "00:00";
-  snprintf(buf, sizeof(buf), "%02d:%02d", g_hour, g_min);
+  rtc_time_t t;
+  rtcGetLocalTime(&t);
+  snprintf(buf, sizeof(buf), "%02u:%02u", t.hour, t.minute);
   if (g_time_label)
     lv_label_set_text(g_time_label, buf);
 }
@@ -28,17 +26,8 @@ static void _timer_cb(lv_timer_t *t) {
   if (!g_time_label)
     return;
 
-  // 内部计时：每秒增加，满 60 秒进 1 分，满 60 分进 1 时
-  g_sec++;
-  if (g_sec >= 60) {
-    g_sec = 0;
-    g_min++;
-    if (g_min >= 60) {
-      g_min = 0;
-      g_hour = (g_hour + 1) % 24;
-    }
-    _update_time_label();
-  }
+  // 每秒从 RTC 服务层读取当前本地时间并刷新显示
+  _update_time_label();
 }
 
 void system_bar_init(void) {

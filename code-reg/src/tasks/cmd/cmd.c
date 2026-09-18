@@ -1,12 +1,14 @@
 #include "cmd.h"
 #include "led/task_led.h"
+#include "rtc/task_rtc.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 
 // 前向声明
-void cmd_clear(char *);
-void cmd_led(char *);
+static void cmd_clear(char *);
+static void cmd_led(char *);
+static void cmd_time(char *);
 
 // 命令表结构
 typedef struct {
@@ -18,6 +20,7 @@ typedef struct {
 static const cmd_t cmds[] = {
     {"clear", cmd_clear},
     {"led", cmd_led},
+    {"time", cmd_time},
 };
 
 // 去除首位空字符
@@ -94,4 +97,38 @@ static void cmd_led(char *arg) {
     printf("\nled 未知参数: '%s'", arg);
   }
   printf("\n");
+}
+
+// time                    打印当前时间
+// time YYYY-MM-DD HH:MM:SS  校时(本地时间, 东八区)
+static void cmd_time(char *arg) {
+  char buf[24];
+
+  if (arg == NULL || *arg == 0) {
+    printf("\n当前时间: %s", rtcFormatNow(buf, sizeof(buf)));
+    if (!rtcIsReady()) {
+      printf(" (RTC 未就绪, 时间不走时)");
+    }
+    printf("\nepoch: %lu\n", (unsigned long)rtcGetEpoch());
+    return;
+  }
+
+  rtc_time_t t;
+  unsigned int y, mo, d, h, mi, s;
+  if (sscanf(arg, "%u-%u-%u %u:%u:%u", &y, &mo, &d, &h, &mi, &s) != 6) {
+    printf("\n用法: time YYYY-MM-DD HH:MM:SS\n");
+    return;
+  }
+  t.year = (uint16_t)y;
+  t.month = (uint8_t)mo;
+  t.day = (uint8_t)d;
+  t.hour = (uint8_t)h;
+  t.minute = (uint8_t)mi;
+  t.second = (uint8_t)s;
+
+  if (!rtcSetLocalTime(&t)) {
+    printf("\n校时失败: 时间无效或 RTC 未就绪\n");
+    return;
+  }
+  printf("\n校时成功: %s\n", rtcFormatNow(buf, sizeof(buf)));
 }

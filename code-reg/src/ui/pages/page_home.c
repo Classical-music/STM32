@@ -23,7 +23,7 @@ typedef struct {
 static const home_menu_item_t home_menu_items[] = {
     {"LED Ctrl", "led", 0, 0},
     {"Buzzer", "beep", 224, 0},
-    {"Sensor", "", 0, 162},
+    {"Calendar", "calendar", 0, 162},
     {"RTC Clock", "", 224, 162},
     {"File Mgr", "", 0, 324},
     {"Media", "", 224, 324},
