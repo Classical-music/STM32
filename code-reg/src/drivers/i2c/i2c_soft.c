@@ -1,7 +1,5 @@
 #include "i2c.h"
 
-#if !I2C_HARD
-
 #include "gpio.h"
 
 #define SCL_HIGH(ctx) GPIO_HIGH(ctx->scl_port, ctx->scl_pin)
@@ -18,9 +16,9 @@
       ;                                                                        \
   } while (0)
 
-static void i2c_init(i2c_ctx_t *ctx) {}
+static void soft_init(i2c_ctx_t *ctx) { (void)ctx; }
 
-static bool i2c_start(i2c_ctx_t *ctx) {
+static bool soft_start(i2c_ctx_t *ctx) {
   // 准备
   SDA_HIGH(ctx);
   SCL_HIGH(ctx);
@@ -33,7 +31,7 @@ static bool i2c_start(i2c_ctx_t *ctx) {
   return true;
 }
 
-static void i2c_stop(i2c_ctx_t *ctx) {
+static void soft_stop(i2c_ctx_t *ctx) {
   // 准备
   SDA_LOW(ctx);
   SCL_HIGH(ctx);
@@ -93,7 +91,7 @@ static bool i2c_wait_ack(i2c_ctx_t *ctx) {
 }
 
 // 发送一个字节
-static bool i2c_send_byte(i2c_ctx_t *ctx, uint8_t data) {
+static bool soft_send_byte(i2c_ctx_t *ctx, uint8_t data) {
   for (uint8_t i = 0; i < 8; i++) {
     // 拉低 SCL, 准备发数据
     SCL_LOW(ctx);
@@ -117,7 +115,7 @@ static bool i2c_send_byte(i2c_ctx_t *ctx, uint8_t data) {
   return i2c_wait_ack(ctx);
 }
 
-static uint8_t i2c_read_byte(i2c_ctx_t *ctx, bool ack) {
+static uint8_t soft_read_byte(i2c_ctx_t *ctx, bool ack) {
   uint8_t data = 0;
   for (uint8_t i = 0; i < 8; i++) {
     // SCL 拉低, 从机准备发数据
@@ -141,13 +139,11 @@ static uint8_t i2c_read_byte(i2c_ctx_t *ctx, bool ack) {
   return data;
 }
 
-i2c_t i2c_ops = {
-    .init = i2c_init,
-    .start = i2c_start,
-    .stop = i2c_stop,
-    .send_addr = i2c_send_byte,
-    .send_byte = i2c_send_byte,
-    .read_byte = i2c_read_byte,
+i2c_t i2c_ops_soft = {
+    .init = soft_init,
+    .start = soft_start,
+    .stop = soft_stop,
+    .send_addr = soft_send_byte,
+    .send_byte = soft_send_byte,
+    .read_byte = soft_read_byte,
 };
-
-#endif

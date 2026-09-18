@@ -8,7 +8,7 @@
  * 1. I2C 引脚 PB6-SCL & PB7-SDA
  * 2. I2C1 未重映射
  * 3. 24c02 地址: 1010000 | 0/1 写/读
- * 4. 使用软件模拟I2C
+ * 4. 软件模拟 / 硬件 I2C 由 I2C_HARD 宏切换
  *
  * 2Kbit = 256KB = 32Page
  * 1Page = 8B
@@ -23,7 +23,15 @@
 #if I2C_HARD
 
 static i2c_ctx_t i2c_ctx = {
-    .i2c = I2C1, .freq = 36, .fast = false, .duty = false};
+    .scl_port = GPIOB,
+    .scl_pin = 6,
+    .sda_port = GPIOB,
+    .sda_pin = 7,
+    .i2c = I2C1,
+    .freq = 36,
+    .fast = false,
+    .duty = false,
+};
 
 #else
 
@@ -40,9 +48,15 @@ static void init_24c02(void) {
   // RCC
   RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
 
+#if I2C_HARD
+  // GPIO 模式 PB6&PB7-复用开漏输出 (I2C1 未重映射)
+  GPIO_MODE_SET(GPIOB, 6, GPIO_MODE_O50 | GPIO_CNF_O_Res_OD);
+  GPIO_MODE_SET(GPIOB, 7, GPIO_MODE_O50 | GPIO_CNF_O_Res_OD);
+#else
   // GPIO 模式 PB6&PB7-通用开漏输出
   GPIO_MODE_SET(GPIOB, 6, GPIO_MODE_O2 | GPIO_CNF_O_Gen_OD);
   GPIO_MODE_SET(GPIOB, 7, GPIO_MODE_O2 | GPIO_CNF_O_Gen_OD);
+#endif
 
   // 初始化 I2C
   I2C_INIT(i2c_ctx);

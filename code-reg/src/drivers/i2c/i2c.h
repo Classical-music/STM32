@@ -3,28 +3,30 @@
 
 #include "type.h"
 
-#define I2C_HARD 0
-
-#if I2C_HARD
-
-typedef struct {
-  I2C_TypeDef *i2c;
-
-  uint32_t freq;
-  bool fast; // 快速模式
-  bool duty; // 占空比
-} i2c_ctx_t;
-
-#else
+/*
+ * I2C_HARD: 0-软件模拟 I2C, 1-允许使用硬件 I2C (可通过编译期 -D 覆盖)
+ *
+ * 软件总线(仅配置 GPIO 引脚)在任何配置下都可用; 硬件总线需要 ctx 配置
+ * i2c 外设(I2C1/I2C2), 且引脚必须是对应外设的复用引脚(如 I2C1: PB6/PB7),
+ * 仅当 I2C_HARD=1 时生效, 否则退回软件模拟。
+ */
+#ifndef I2C_HARD
+#define I2C_HARD 1
+#endif
 
 typedef struct {
   GPIO_TypeDef *scl_port;
   uint8_t scl_pin;
   GPIO_TypeDef *sda_port;
   uint8_t sda_pin;
-} i2c_ctx_t;
 
+#if I2C_HARD
+  I2C_TypeDef *i2c; // 非 NULL 且引脚为硬件复用引脚时走硬件 I2C
+  uint32_t freq;    // I2C 外设输入时钟 PCLK1, 单位 MHz
+  bool fast;        // 快速模式(400kHz)
+  bool duty;        // 快速模式占空比 16/9 (false 为 2/1)
 #endif
+} i2c_ctx_t;
 
 typedef struct i2c_ops {
   void (*init)(i2c_ctx_t *ctx);
@@ -35,7 +37,10 @@ typedef struct i2c_ops {
   uint8_t (*read_byte)(i2c_ctx_t *ctx, bool ack);
 } i2c_t;
 
-extern i2c_t i2c_ops;
+extern i2c_t i2c_ops_soft;
+#if I2C_HARD
+extern i2c_t i2c_ops_hard;
+#endif
 
 void i2c_init(i2c_ctx_t *ctx);
 
