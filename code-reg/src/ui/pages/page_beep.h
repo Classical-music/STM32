@@ -7,6 +7,10 @@
  * 只在页面首次创建时调用；页面被路由缓存复用时不会再执行。 */
 void view_beep_init(lv_obj_t *page, void *params);
 
+/* 页面离开显示（转缓存/入历史栈）时暂停单次播放完成定时器，重新显示时恢复。 */
+void view_beep_hide(lv_obj_t *page);
+void view_beep_show(lv_obj_t *page);
+
 /* 页面被路由缓存淘汰、真正销毁前清空本模块的控件引用。 */
 void view_beep_destroy(lv_obj_t *page);
 

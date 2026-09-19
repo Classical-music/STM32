@@ -30,5 +30,7 @@ static void vCmdTask(void *arg) {
 }
 
 void cmdTaskInit(void) {
-  xTaskCreate(vCmdTask, "cmd", 128, NULL, 2, NULL); //
+  // 栈需覆盖: recv_buff[256] + 命令处理链 + printf 深度.
+  // memtest 等深层调用会穿透 512B 导致溢出卡死, 放大到 2KB.
+  xTaskCreate(vCmdTask, "cmd", 2048, NULL, 2, NULL); //
 }

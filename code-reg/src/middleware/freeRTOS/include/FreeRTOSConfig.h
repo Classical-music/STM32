@@ -78,6 +78,7 @@
 
 #define INCLUDE_vTaskSuspend 1
 #define INCLUDE_xTaskDelayUntil 1
+#define INCLUDE_xTaskGetHandle 1 // 按任务名取句柄(memtest 时序扫描挂起 GUI 用)
 
 // 内存分配&任务创建
 #define configSUPPORT_DYNAMIC_ALLOCATION 1 // 启用堆内存

@@ -23,10 +23,12 @@
 #include <stdio.h>
 #include <string.h>
 
-/* 路由表、页面历史栈和页面缓存的最大容量。 */
+/* 路由表、页面历史栈和页面缓存的最大容量。
+ * PAGE_CACHE_SIZE=3：当前页 1 + 缓存 3 = 4，恰好覆盖 home/led/beep/calendar
+ * 全套高频业务页，常规轮换 100% 命中缓存，避免最重的 calendar 页反复重建。 */
 #define MAX_ROUTES 24
 #define STACK_SIZE 8
-#define PAGE_CACHE_SIZE 2
+#define PAGE_CACHE_SIZE 3
 
 /* 路由表使用固定内存，避免为少量页面管理多组动态内存。 */
 static route_entry_t routes[MAX_ROUTES];
@@ -107,6 +109,25 @@ static const route_entry_t *find_entry(const char *name) {
   }
 
   return NULL;
+}
+
+/*
+ * 在页面显隐转换点调用路由注册的 show/hide 回调。
+ * show 非 0 表示页面重新显示，0 表示离开显示。
+ * 路由未注册、页面为空或对应回调为 NULL 时静默跳过。
+ */
+static void route_call_visibility(const char *route, lv_obj_t *page, int show) {
+  const route_entry_t *entry = find_entry(route);
+
+  if (entry == NULL || page == NULL)
+    return;
+
+  if (show) {
+    if (entry->show != NULL)
+      entry->show(page);
+  } else if (entry->hide != NULL) {
+    entry->hide(page);
+  }
 }
 
 /*
@@ -227,6 +248,8 @@ static lv_obj_t *page_create(const route_entry_t *entry, void *params) {
 
   if (page != NULL) {
     lv_obj_clear_flag(page, LV_OBJ_FLAG_HIDDEN);
+    /* 先恢复页面自身任务（show 回调），再刷新内容 */
+    route_call_visibility(entry->name, page, 1);
     if (entry->refresh != NULL)
       entry->refresh(page, params);
     return page;
@@ -248,8 +271,10 @@ static void page_replace(const route_entry_t *entry, void *params) {
   current_page = page_create(entry, params);
   current_route = entry->name;
 
-  if (prev != NULL && prev != current_page)
+  if (prev != NULL && prev != current_page) {
     cache_put(prev_route, prev);
+    route_call_visibility(prev_route, prev, 0);
+  }
 }
 
 /*
@@ -314,6 +339,10 @@ void router_init(void) {
  * - title：显示在系统栏左侧的页面标题，可为 NULL；
  * - init_fn：页面容器首次创建后负责填充控件的初始化函数；
  * - refresh_fn：页面从缓存复用时刷新动态内容，可为 NULL 表示原样复用；
+ * - hide_fn：页面离开显示（转入缓存或压入历史栈）时调用，用于暂停定时器等
+ *   自身任务，可为 NULL；
+ * - show_fn：页面重新显示（缓存复用或从历史栈恢复）时调用，用于还原 hide_fn
+ *   中暂停的任务，可为 NULL；
  * - destroy_fn：页面被缓存淘汰、真正销毁前清理模块状态，可为 NULL。
  *
  * 返回 0 表示成功，返回 -1 表示路由表已满。
@@ -321,6 +350,8 @@ void router_init(void) {
 int router_register_ex(const char *name, const char *title,
                        route_init_fn_t init_fn,
                        route_refresh_fn_t refresh_fn,
+                       route_visibility_fn_t hide_fn,
+                       route_visibility_fn_t show_fn,
                        route_destroy_fn_t destroy_fn) {
   /* 从前向后寻找第一个空闲表项。 */
   for (int i = 0; i < MAX_ROUTES; i++) {
@@ -329,6 +360,8 @@ int router_register_ex(const char *name, const char *title,
       routes[i].title = title;
       routes[i].init = init_fn;
       routes[i].refresh = refresh_fn;
+      routes[i].hide = hide_fn;
+      routes[i].show = show_fn;
       routes[i].destroy = destroy_fn;
       return 0;
     }
@@ -354,6 +387,8 @@ void router_set_static_routes(const route_entry_t *static_routes, int count) {
     routes[i].title = static_routes[i].title;
     routes[i].init = static_routes[i].init;
     routes[i].refresh = static_routes[i].refresh;
+    routes[i].hide = static_routes[i].hide;
+    routes[i].show = static_routes[i].show;
     routes[i].destroy = static_routes[i].destroy;
   }
 }
@@ -402,6 +437,8 @@ static void router_async_cb(void *user_data) {
       history[stack_top].page = current_page;
       history[stack_top].route = current_route;
       lv_obj_add_flag(current_page, LV_OBJ_FLAG_HIDDEN);
+      /* 入栈隐藏的页面同样要暂停自身任务，pop 恢复时再还原 */
+      route_call_visibility(current_route, current_page, 0);
     }
 
     current_page = page_create(entry, params);
@@ -417,13 +454,18 @@ static void router_async_cb(void *user_data) {
     history[stack_top].route = NULL;
     stack_top--;
 
-    /* 恢复的页面已经包含原控件，只需取消隐藏，不再执行初始化函数。 */
-    if (restored != NULL)
+    /* 恢复的页面已经包含原控件，只需取消隐藏并还原自身任务，
+     * 不再执行初始化函数。此时 current_route 已指向恢复页的路由。 */
+    if (restored != NULL) {
       lv_obj_clear_flag(restored, LV_OBJ_FLAG_HIDDEN);
+      route_call_visibility(current_route, restored, 1);
+    }
 
     /* 离开的页面转入缓存，下次进入同一路由时可以直接复用。 */
-    if (leaving != NULL && leaving != restored)
+    if (leaving != NULL && leaving != restored) {
       cache_put(leaving_route, leaving);
+      route_call_visibility(leaving_route, leaving, 0);
+    }
   }
 
   /* 切换完成后，把当前路由注册的标题同步到系统栏。 */

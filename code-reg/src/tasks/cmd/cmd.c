@@ -9,6 +9,10 @@
 static void cmd_clear(char *);
 static void cmd_led(char *);
 static void cmd_time(char *);
+static void cmd_memtest(char *);
+
+extern void sram_speed_test(void);
+extern void sram_timing_scan(void);
 
 // 命令表结构
 typedef struct {
@@ -21,6 +25,7 @@ static const cmd_t cmds[] = {
     {"clear", cmd_clear},
     {"led", cmd_led},
     {"time", cmd_time},
+    {"memtest", cmd_memtest},
 };
 
 // 去除首位空字符
@@ -131,4 +136,16 @@ static void cmd_time(char *arg) {
     return;
   }
   printf("\n校时成功: %s\n", rtcFormatNow(buf, sizeof(buf)));
+}
+
+// memtest        内部/外部 SRAM 读写速度基准 (当前 FSMC 时序)
+// memtest scan   扫描 NE3 FSMC 时序档位并逐档测速, 结束后自动恢复默认时序
+static void cmd_memtest(char *arg) {
+  if (arg && strcmp(arg, "scan") == 0) {
+    sram_timing_scan();
+  } else if (arg && *arg) {
+    printf("\n用法: memtest | memtest scan\n");
+  } else {
+    sram_speed_test();
+  }
 }

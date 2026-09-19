@@ -682,6 +682,29 @@ void view_calendar_init(lv_obj_t *page, void *params) {
   g_update_timer = lv_timer_create(calendar_timer_cb, 1000, NULL);
 }
 
+/*
+ * 页面离开显示（转入缓存或压入历史栈）：暂停秒级时钟定时器，
+ * 避免隐藏页面每秒白白刷新一遍控件。
+ */
+void view_calendar_hide(lv_obj_t *page) {
+  (void)page;
+
+  if (g_update_timer)
+    lv_timer_pause(g_update_timer);
+}
+
+/*
+ * 页面重新显示（缓存复用或从历史栈恢复）：恢复时钟定时器。
+ * LVGL 在定时器 paused 期间不推进 last_run，离开超过一个周期时
+ * 恢复后的第一轮 handler 会立即补发一次回调，时钟无需额外处理即可跟上。
+ */
+void view_calendar_show(lv_obj_t *page) {
+  (void)page;
+
+  if (g_update_timer)
+    lv_timer_resume(g_update_timer);
+}
+
 /* 页面被缓存淘汰销毁前，清空本模块的控件引用和定时器，避免下次重建误判。 */
 void view_calendar_destroy(lv_obj_t *page) {
   uint8_t i;

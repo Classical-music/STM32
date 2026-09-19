@@ -53,8 +53,19 @@ void fsmc_ne3_init(void) {
 
   // BTR 片选时序 配置
   FSMC_BTR(3) &= ~FSMC_BTR3_ACCMOD; // 00-访问模式A(无效)
-  FSMC_BTR(3) |= 2 << 8;            // 数据保持时间
-  FSMC_BTR(3) |= 0 & 0xF;           // 地址建立时间
+
+  // 默认时序 (ADDSET/DATAST), 供 memtest 运行时对比
+  fsmc_ne3_set_timing(FSMC_NE3_DEF_ADDSET, FSMC_NE3_DEF_DATAST);
 
   FSMC_BCR(3) |= FSMC_BCR3_MBKEN; // 使能Bank1-NE3
+}
+
+// 运行时修改 NE3 时序: 仅改 ADDSET[3:0] 与 DATAST[15:8], 保留其余字段.
+// 用于 memtest 扫描时序找最优点. 收紧过快会导致外部 SRAM 读写错误.
+void fsmc_ne3_set_timing(uint32_t addset, uint32_t datast) {
+  uint32_t btr = FSMC_BTR(3);
+  btr &= ~((0xFu << 0) | (0xFFu << 8)); // 清 ADDSET[3:0] DATAST[15:8]
+  btr |= (addset & 0xFu) << 0;          // 地址建立时间
+  btr |= (datast & 0xFFu) << 8;         // 数据建立时间
+  FSMC_BTR(3) = btr;
 }

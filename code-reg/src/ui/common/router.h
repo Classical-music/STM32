@@ -34,17 +34,28 @@ typedef void (*route_refresh_fn_t)(lv_obj_t *page, void *params);
 // 可以为 NULL
 typedef void (*route_destroy_fn_t)(lv_obj_t *page);
 
+// 页面显隐回调类型（hide / show 签名相同）
+// hide：页面离开显示时调用（转入缓存，或 push 存入历史栈），用于暂停
+//       lv_timer 等周期任务，避免隐藏页面白白刷新
+// show：页面重新显示时调用（缓存命中复用，或 pop 从历史栈恢复），用于
+//       恢复 hide 中暂停的任务
+// 首次创建不调 show（定时器等都是新建的），从历史栈隐藏/恢复同样会触发，
+// 因此回调要求可重入且成对。可以为 NULL
+typedef void (*route_visibility_fn_t)(lv_obj_t *page);
+
 // 初始化路由子系统，清空注册表、历史栈和页面缓存
 // 内部通过 lv_scr_act() 取得承载系统栏、Dock 和页面的默认屏幕
 void router_init(void);
 
-// 注册一个路由，并指定系统栏标题、页面缓存复用和销毁时的回调
+// 注册一个路由，并指定系统栏标题与页面生命周期回调
 // title 为显示在系统栏左侧的页面标题，允许传 NULL
-// refresh_fn / destroy_fn 允许传 NULL
+// refresh_fn / hide_fn / show_fn / destroy_fn 均允许传 NULL
 // 返回 0 成功，-1 失败（例如注册表已满）
 int router_register_ex(const char *name, const char *title,
                        route_init_fn_t init_fn,
                        route_refresh_fn_t refresh_fn,
+                       route_visibility_fn_t hide_fn,
+                       route_visibility_fn_t show_fn,
                        route_destroy_fn_t destroy_fn);
 
 // 替换当前页面为指定路由（不入栈），被替换的页面转入缓存
@@ -70,6 +81,8 @@ typedef struct {
   const char *title; // 显示在系统栏左侧的页面标题，可为 NULL
   route_init_fn_t init;
   route_refresh_fn_t refresh;
+  route_visibility_fn_t hide;  // 页面离开显示（转缓存/入历史栈）
+  route_visibility_fn_t show;  // 页面重新显示（缓存复用/历史栈恢复）
   route_destroy_fn_t destroy;
 } route_entry_t;
 

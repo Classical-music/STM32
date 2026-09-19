@@ -80,6 +80,8 @@
 static bool g_rtc_ready = false;
 
 // 轮询 RTC_CRL 中的标志位直到置位(或超时)
+// CRL: 配置寄存器, 用于配置 RTC 寄存器
+// RTOFF: RTC 操作完成标志位
 static bool bsp_rtc_wait_crl_flag(uint16_t flag, uint32_t timeout) {
   for (uint32_t i = 0; i < timeout; i++) {
     if (RTC->CRL & flag) {
@@ -94,6 +96,12 @@ static bool bsp_rtc_wait_rtoff(void) {
   return bsp_rtc_wait_crl_flag(RTC_CRL_RTOFF, RTC_RTOFF_TIMEOUT);
 }
 
+/* 进入/退出配置模式，通过设置/清除 RTC_CRL.CNF 来实现
+ *   CRL: 配置寄存器, 用于配置 RTC 寄存器
+ *   CNF: 配置标志位, 用于进入/退出配置模式
+ * 每次修改 RTC 寄存器前, 要等待上一次操作完成 RTOFF=1
+ * 修改完成后, 生效标识: 等待 RTOFF=1
+ */
 // 进入配置模式: 等待操作完成 -> 置 CNF -> 等待操作完成
 static bool bsp_rtc_enter_config(void) {
   if (!bsp_rtc_wait_rtoff()) {
@@ -117,12 +125,20 @@ static bool bsp_rtc_wait_sync(void) {
 
 // 首次配置备份域: 使能 PWR/BKP 时钟, 解除备份域写保护
 static void bsp_rtc_backup_domain_unlock(void) {
+  // PWR 意思是"电源管理器" & BKP 意思是"备份域管理器"
+  // 1. 使能 PWR/BKP 时钟
   RCC->APB1ENR |= RCC_APB1ENR_PWREN | RCC_APB1ENR_BKPEN;
+  // 2. 解除备份域写保护, DBP 意思是"备份域写保护"
   PWR->CR |= PWR_CR_DBP;
 }
 
 // 启动 LSE 并等待就绪
 static bool bsp_rtc_lse_start(void) {
+  // BDCR 意思是"备份域时钟寄存器", 用于配置 LSE = 32768 Hz
+  // LSEON 意思是"使能 LSE", 用于启动 LSE 晶振
+  // LERDY 意思是"LSE 就绪", 用于等待 LSE 晶振稳定
+
+  // 首先使能 LSE, 然后轮询 LERDY 等待 LSE 晶振稳定
   RCC->BDCR |= RCC_BDCR_LSEON;
   for (uint32_t i = 0; i < RTC_LSE_TIMEOUT; i++) {
     if (RCC->BDCR & RCC_BDCR_LSERDY) {
@@ -134,6 +150,15 @@ static bool bsp_rtc_lse_start(void) {
 
 // 完整配置流程: 时钟源 + 预分频 + 计数器清零
 static bool bsp_rtc_config(void) {
+  /* 
+   * 配置 RTC 寄存器: 时钟源 + 预分频 + 计数器清零
+   * 配置顺序:
+   * 1. 选择 LSE 作为 RTC 时钟源, 并使能 RTC
+   * 2. 进入配置模式, 设置预分频并把计数器清零
+   * 3. 等待寄存器同步
+   * 4. 写入魔数, 标记备份域已配置
+   */
+
   // 1. 选择 LSE 作为 RTC 时钟源, 并使能 RTC
   RCC->BDCR = (RCC->BDCR & ~RCC_BDCR_RTCSEL) | RCC_BDCR_RTCSEL_LSE;
   RCC->BDCR |= RCC_BDCR_RTCEN;
@@ -142,10 +167,13 @@ static bool bsp_rtc_config(void) {
   if (!bsp_rtc_enter_config()) {
     return false;
   }
+  // 配置 RTC 预分频器, 总分频 = PRL + 1
   RTC->PRLH = (uint16_t)((RTC_PRL_VALUE >> 16) & RTC_PRLH_PRL);
   RTC->PRLL = (uint16_t)(RTC_PRL_VALUE & RTC_PRLL_PRL);
+  // 配置 RTC 计数器, 清零计数
   RTC->CNTH = 0;
   RTC->CNTL = 0;
+  // 退出配置模式
   if (!bsp_rtc_exit_config()) {
     return false;
   }
@@ -161,21 +189,24 @@ static bool bsp_rtc_config(void) {
 }
 
 void bsp_rtc_init(void) {
+  // 1. 解除备份域写保护
   bsp_rtc_backup_domain_unlock();
 
-  // 魔数存在 => 备份域未掉电, RTC 已在走时, 跳过配置以保留时间
+  // 读取备份域 BKP_DR1, 检查是否为魔数, 即是否已配置过
   if (BKP->DR1 == RTC_BAK_MAGIC) {
     g_rtc_ready = true;
     return;
   }
 
+  // RTC 时钟使用外部低速晶振 LSE = 32768 Hz, 因此先启动 LSE 并等待就绪
   if (!bsp_rtc_lse_start()) {
     printf("rtc: LSE ready timeout\r\n");
     g_rtc_ready = false;
     return;
   }
 
-  g_rtc_ready = bsp_rtc_config();
+  // 3. 配置 RTC 寄存器
+   g_rtc_ready = bsp_rtc_config();
   if (!g_rtc_ready) {
     printf("rtc: config failed\r\n");
   }

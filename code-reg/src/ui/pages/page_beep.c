@@ -470,6 +470,26 @@ void view_beep_init(lv_obj_t *page, void *params) {
          (unsigned long)((end_tick - start_tick) * portTICK_PERIOD_MS));
 }
 
+/*
+ * 页面离开显示（转入缓存或压入历史栈）：暂停单次播放完成定时器。
+ * 蜂鸣器硬件不受影响继续播放，只是按钮复位动作推迟到页面重新显示时，
+ * 恢复后若时长已到期，LVGL 会在第一轮 handler 立即补发回调复位按钮。
+ */
+void view_beep_hide(lv_obj_t *page) {
+  (void)page;
+
+  if (g_single_timer)
+    lv_timer_pause(g_single_timer);
+}
+
+/* 页面重新显示：恢复单次播放完成定时器。 */
+void view_beep_show(lv_obj_t *page) {
+  (void)page;
+
+  if (g_single_timer)
+    lv_timer_resume(g_single_timer);
+}
+
 /* 页面被缓存淘汰销毁前，清空本模块的控件引用，避免下次重建误判。 */
 void view_beep_destroy(lv_obj_t *page) {
   (void)page;

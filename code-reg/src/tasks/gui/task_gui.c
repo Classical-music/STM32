@@ -28,5 +28,6 @@ void vGuiTask(void *arg) {
 }
 
 void taskGuiInit(void) {
-  xTaskCreate(vGuiTask, "cmd", 2048, NULL, 2, NULL); //
+  // 注意: 原名误写为 "cmd"(与串口命令任务同名), 会导致 xTaskGetHandle 找错
+  xTaskCreate(vGuiTask, "gui", 2048, NULL, 2, NULL); //
 }
