@@ -445,6 +445,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\drivers\fsmc\fsmc.c</FilePath>
             </File>
+            <File>
+              <FileName>adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\drivers\adc\adc.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -574,6 +579,11 @@
               <FileName>sram_test.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\user\test\sram_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>adc_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\user\test\adc_test.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -732,6 +742,11 @@
               <FileName>page_calendar.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\ui\pages\page_calendar.c</FilePath>
+            </File>
+            <File>
+              <FileName>page_status.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\ui\pages\page_status.c</FilePath>
             </File>
             <File>
               <FileName>system_bar.c</FileName>

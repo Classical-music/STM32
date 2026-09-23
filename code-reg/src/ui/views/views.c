@@ -7,6 +7,7 @@
 #include "../pages/page_home.h"
 #include "../pages/page_led.h"
 #include "../pages/page_lvgl_perf.h"
+#include "../pages/page_status.h"
 
 /* 默认屏幕的背景色，与页面背景保持一致，避免首帧出现主题默认的白底。 */
 #define VIEWS_ROOT_BG_COLOR 0xF2F2F2
@@ -55,6 +56,11 @@ void views_init(void) {
   // lvgl_perf 的用途是测量控件创建耗时，缓存复用时需要重建控件重新测量。
   router_register_ex("lvgl_perf", "LVGL Perf", view_lvgl_perf_init,
                      view_lvgl_perf_refresh, NULL, NULL, NULL);
+  // status 有 1s 刷新定时器：隐藏时暂停、显示时恢复，
+  // 恢复后 LVGL 自动补发到期的回调，缓存复用时无需额外 refresh；
+  // 模块保存了控件引用和定时器，销毁时需要清空。
+  router_register_ex("status", "Device Status", view_status_init, NULL,
+                     view_status_hide, view_status_show, view_status_destroy);
 
   // 导航到首页
   router_navigate("home", NULL);
