@@ -1,5 +1,7 @@
 #include "cmd.h"
+#include "adc/adc.h"
 #include "led/task_led.h"
+#include "light_sensor/light_sensor.h"
 #include "rtc/task_rtc.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -10,6 +12,7 @@ static void cmd_clear(char *);
 static void cmd_led(char *);
 static void cmd_time(char *);
 static void cmd_memtest(char *);
+static void cmd_lux(char *);
 
 extern void sram_speed_test(void);
 extern void sram_timing_scan(void);
@@ -26,6 +29,7 @@ static const cmd_t cmds[] = {
     {"led", cmd_led},
     {"time", cmd_time},
     {"memtest", cmd_memtest},
+    {"lux", cmd_lux},
 };
 
 // 去除首位空字符
@@ -148,4 +152,17 @@ static void cmd_memtest(char *arg) {
   } else {
     sram_speed_test();
   }
+}
+
+// lux    打印环境光传感器读数: 原始值 / 节点电压 / 光照百分比
+static void cmd_lux(char *arg) {
+  if (arg != NULL && *arg != 0) {
+    printf("\n用法: lux\n");
+    return;
+  }
+
+  uint16_t raw = light_sensor_read_raw();
+  uint32_t mv = adc_to_mv(raw);
+  printf("\nlight: raw=%u  %lu mV  percent=%u%%\n", raw, (unsigned long)mv,
+         light_sensor_mv_to_percent(mv));
 }

@@ -1,22 +1,25 @@
 #include "page_status.h"
 #include "adc/adc.h"
+#include "light_sensor/light_sensor.h"
 #include "lvgl.h"
 
 /* ==================== 布局常量 ====================
  * 页面内容区 432 x 636（480 x 684 减去四周 24 内边距），
- * 两张信息卡片纵向排列，全部使用固定坐标。
+ * 三张信息卡片纵向排列，全部使用固定坐标。
+ * 高度取 190：3 * 190 + 2 * 24 = 618，恰好留在 636 之内。
  */
 #define STATUS_CARD_WIDTH 432
-#define STATUS_CARD_HEIGHT 200
+#define STATUS_CARD_HEIGHT 190
 #define STATUS_CARD_GAP 24
 #define STATUS_TEMP_CARD_Y 0
 #define STATUS_VOLT_CARD_Y (STATUS_CARD_HEIGHT + STATUS_CARD_GAP)
+#define STATUS_LIGHT_CARD_Y (STATUS_VOLT_CARD_Y + STATUS_CARD_HEIGHT + STATUS_CARD_GAP)
 
-/* 卡片内部布局：标题在上，数值居中，说明在下，三行按 66px 等距分布。 */
+/* 卡片内部布局：标题在上，数值居中，说明在下，三行按 64px 等距分布。 */
 #define STATUS_TITLE_X 24
 #define STATUS_TITLE_Y 18
-#define STATUS_VALUE_Y 84
-#define STATUS_HINT_Y 150
+#define STATUS_VALUE_Y 82
+#define STATUS_HINT_Y 146
 
 /* 刷新周期：1s 足够跟上温度变化，又不至于让 ADC 轮询占用过多 CPU。 */
 #define STATUS_REFRESH_PERIOD_MS 1000
@@ -26,6 +29,7 @@
 #define STATUS_COLOR_TEXT_HINT 0x8A8A8A
 #define STATUS_COLOR_ACCENT_TEMP 0xE25555
 #define STATUS_COLOR_ACCENT_VOLT 0x3A76F4
+#define STATUS_COLOR_ACCENT_LIGHT 0xF0A020
 
 /* ==================== 模块状态 ====================
  * ADC 为全设备共享外设，只需初始化一次；页面被缓存淘汰后重建时
@@ -35,6 +39,7 @@ static bool g_adc_inited;
 /* 页面控件引用（destroy 中清空，避免重建时误判控件已存在）。 */
 static lv_obj_t *g_temp_value_label;
 static lv_obj_t *g_volt_value_label;
+static lv_obj_t *g_light_value_label;
 
 /* 1s 软定时器：退出页面暂停、重新显示恢复、销毁时删除。 */
 static lv_timer_t *g_status_timer;
@@ -80,7 +85,8 @@ static void status_styles_init(void) {
 /* ==================== 数据采集与刷新 ====================
  * 两个内部通道都要求足够长的采样窗口（手册要求 >= 17.1 周期，
  * 这里直接用最长的 239.5 周期换取稳定读数）；两次转换合计
- * 约 (239.5 + 12.5) * 2 / 9MHz ≈ 56us，对 UI 无感知。 */
+ * 约 (239.5 + 12.5) * 2 / 9MHz ≈ 56us，对 UI 无感知。
+ * 光照通道由 light_sensor 模块内部完成去极值平均滤波。 */
 static void status_update_values(void) {
   uint16_t raw;
   int16_t temp_x10;
@@ -103,6 +109,14 @@ static void status_update_values(void) {
   mv = adc_to_mv(raw);
   if (g_volt_value_label != NULL)
     lv_label_set_text_fmt(g_volt_value_label, "%lu mV", (unsigned long)mv);
+
+  /* PF8 光敏分压：电压越低表示光照越强，同一次采样同时给出百分比与 mV。 */
+  if (g_light_value_label != NULL) {
+    uint32_t light_mv = light_sensor_read_mv();
+    lv_label_set_text_fmt(g_light_value_label, "%d %%  (%lu mV)",
+                          light_sensor_mv_to_percent(light_mv),
+                          (unsigned long)light_mv);
+  }
 }
 
 /* lv_timer 回调：在 gui 任务的 lv_task_handler 上下文中执行。 */
@@ -171,6 +185,11 @@ void view_status_init(lv_obj_t *page, void *params) {
                      "ADC1 IN17 - VREFINT 1.2V",
                      STATUS_COLOR_ACCENT_VOLT, &g_volt_value_label);
 
+  /* 光照卡片：PF8 光敏分压节点，由 ADC3 IN6 采集。 */
+  status_create_card(page, STATUS_LIGHT_CARD_Y, "Light",
+                     "ADC3 IN6 - PF8 photoresistor",
+                     STATUS_COLOR_ACCENT_LIGHT, &g_light_value_label);
+
   /* 先同步刷新一次，避免首秒显示占位符。 */
   status_update_values();
 
@@ -206,4 +225,5 @@ void view_status_destroy(lv_obj_t *page) {
   }
   g_temp_value_label = NULL;
   g_volt_value_label = NULL;
+  g_light_value_label = NULL;
 }

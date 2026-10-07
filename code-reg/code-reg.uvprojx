@@ -476,6 +476,11 @@
               <FilePath>.\src\bsp\tpad\tpad.c</FilePath>
             </File>
             <File>
+              <FileName>light_sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\bsp\light_sensor\light_sensor.c</FilePath>
+            </File>
+            <File>
               <FileName>board.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\bsp\board.c</FilePath>

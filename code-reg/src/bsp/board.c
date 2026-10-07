@@ -5,6 +5,7 @@
 #include "key/key.h"
 #include "lcd/lcd.h"
 #include "led/led.h"
+#include "light_sensor/light_sensor.h"
 #include "rtc/bsp_rtc.h"
 #include "touch/bsp_touch.h"
 #include "tpad/tpad.h"
@@ -20,6 +21,8 @@ void board_init(void) {
 
   key_init();  // 初始化 key 驱动
   tpad_init(); // 初始化 tpad 驱动
+
+  light_sensor_init(); // 初始化环境光传感器(PF8/ADC3)
 
   bsp_rtc_init(); // 初始化 RTC 秒计数器(备份域魔数保证复位后继续走时)
 
