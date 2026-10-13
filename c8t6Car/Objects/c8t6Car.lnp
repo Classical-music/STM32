@@ -1,0 +1,16 @@
+--cpu Cortex-M3
+".\objects\core_cm3.o"
+".\objects\system_stm32f10x.o"
+".\objects\startup_stm32f10x_md.o"
+".\objects\bsp_led.o"
+".\objects\bsp_tick.o"
+".\objects\bsp_seg.o"
+".\objects\bsp_beep.o"
+".\objects\board.o"
+".\objects\test_seg.o"
+".\objects\test_beep.o"
+".\objects\main.o"
+--strict --scatter ".\Objects\c8t6Car.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list ".\Listings\c8t6Car.map" -o .\Objects\c8t6Car.axf
